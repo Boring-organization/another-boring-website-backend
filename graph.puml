@@ -1,0 +1,14 @@
+@startuml
+top to bottom direction
+package .{
+annotation . {
+-const apiUrl: STRING
+
+-graphqlHandler(resolver ResolverRoot): HandlerFunc
+-playgroundHandler(): HandlerFunc
+-main()
+}
+}
+
+
+@enduml
