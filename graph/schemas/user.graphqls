@@ -1,26 +1,58 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
+scalar Int64
+
+directive @maxLength(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @minLength(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @maxValue(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @minValue(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @notEmptyString(
+    state: Boolean
+) on INPUT_FIELD_DEFINITION
+
 
 type User {
     id:      String!
     nickname: String!
     login:    String!
     password: String!
+    createdAt: Int64!
+    editedAt: Int64
+    deletedAt: Int64
+    isAdmin: Boolean!
 }
 
-
-input CreateUser {
-    nickname: String!
-    login:    String!
-    password: String!
-}
-
-input UpdateUser {
+type NewUser {
     id:      String!
     nickname: String!
     login:    String!
     password: String!
+    token:  String!
+}
+
+
+input CreateUser {
+    nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString(state: true)
+    login:    String! @minLength(value: 5) @maxLength(value: 100) @notEmptyString(state: true)
+    password: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
+    deviceName: String! @maxLength(value: 1000) @notEmptyString(state: true)
+}
+
+input UpdateUser {
+    id:      String!
+    nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString(state: true)
+    login:    String! @minLength(value: 5) @maxLength(value: 100) @notEmptyString(state: true)
+    password: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
 }
 
 input UserId {
@@ -31,10 +63,11 @@ input UserId {
 type Query {
     users: [User!]!
     user(input: UserId!): User!
+    me: User!
 }
 
 type Mutation {
-    createUser(input: CreateUser!): User!
+    createUser(input: CreateUser!): NewUser!
     updateUser(input: UpdateUser!): User!
     deleteUser(input: UserId!): Boolean!
 }

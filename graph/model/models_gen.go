@@ -3,12 +3,21 @@
 package model
 
 type CreateUser struct {
-	Nickname string `json:"nickname"`
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Nickname   string `json:"nickname" maxLength:30 minLength:2`
+	Login      string `json:"login" maxLength:100 minLength:5`
+	Password   string `json:"password" maxLength:100 minLength:8`
+	DeviceName string `json:"deviceName" maxLength:250`
 }
 
 type Mutation struct {
+}
+
+type NewUser struct {
+	ID       string `json:"id"`
+	Nickname string `json:"nickname"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
+	Token    string `json:"token"`
 }
 
 type Query struct {
@@ -16,16 +25,20 @@ type Query struct {
 
 type UpdateUser struct {
 	ID       string `json:"id"`
-	Nickname string `json:"nickname"`
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Nickname string `json:"nickname" maxLength:30 minLength:2`
+	Login    string `json:"login" maxLength:100 minLength:5`
+	Password string `json:"password" minLength:8 maxLength:100`
 }
 
 type User struct {
-	ID       string `json:"id"`
-	Nickname string `json:"nickname"`
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	ID        string `json:"id"`
+	Nickname  string `json:"nickname"`
+	Login     string `json:"login"`
+	Password  string `json:"password"`
+	CreatedAt int    `json:"createdAt"`
+	EditedAt  *int   `json:"editedAt,omitempty"`
+	DeletedAt *int   `json:"deletedAt,omitempty"`
+	IsAdmin   bool   `json:"isAdmin"`
 }
 
 type UserID struct {

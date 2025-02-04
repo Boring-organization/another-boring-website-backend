@@ -1,6 +1,8 @@
 package resolver
 
-import "TestGoLandProject/database"
+import (
+	"TestGoLandProject/core/database"
+)
 
 // This file will not be regenerated automatically.
 //
