@@ -4,9 +4,9 @@ import (
 	"TestGoLandProject/cli"
 	"TestGoLandProject/core/database"
 	"TestGoLandProject/core/router"
+	"TestGoLandProject/core/validation"
 	"TestGoLandProject/global_consts"
 	"TestGoLandProject/graph"
-	directiveValidationHooks "TestGoLandProject/graph/directive_hooks/validation"
 	"TestGoLandProject/graph/resolvers"
 	"context"
 	"fmt"
@@ -17,7 +17,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/99designs/gqlgen/plugin/modelgen"
 	"github.com/gin-gonic/gin"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -29,21 +28,23 @@ func generateSchema() {
 		panic(err)
 	}
 
-	p := modelgen.Plugin{
-		FieldHook: directiveValidationHooks.CustomFieldHook,
-	}
+	err = api.Generate(cfg)
 
-	err = api.Generate(cfg, api.ReplacePlugin(&p))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func graphqlHandler(resolver graph.ResolverRoot, databaseInstance database.Database) gin.HandlerFunc {
+	graphQlConfig := graph.Config{Resolvers: resolver}
+
+	err := validation.ImplementDirectives(&graphQlConfig.Directives, databaseInstance)
 
 	if err != nil {
 		panic(err)
 	}
 
-}
-
-func graphqlHandler(resolver graph.ResolverRoot) gin.HandlerFunc {
-
-	serverHandler := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
+	serverHandler := handler.New(graph.NewExecutableSchema(graphQlConfig))
 
 	serverHandler.AddTransport(transport.Options{})
 	serverHandler.AddTransport(transport.GET{})
@@ -86,13 +87,15 @@ func main() {
 		fmt.Println("[GraphQL] Skip schema generation\n")
 	}
 
-	resolverInstance := &resolver.Resolver{&database.Database{database.InitDb()}}
+	databaseInstance := database.Database{database.InitDb()}
+
+	resolverInstance := &resolver.Resolver{&databaseInstance}
 	defer resolverInstance.CloseDb()
 
 	ginRouter := gin.Default()
 	ginRouter.Use(GinContextToContextMiddleware())
 
-	ginRouter.POST(global_consts.QueryUrl, graphqlHandler(resolverInstance))
+	ginRouter.POST(global_consts.QueryUrl, graphqlHandler(resolverInstance, databaseInstance))
 	ginRouter.GET("/", playgroundHandler())
 	router.InitHttpRoutes(ginRouter)
 

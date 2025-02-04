@@ -44,11 +44,12 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	Authenticated  func(ctx context.Context, obj any, next graphql.Resolver, state *bool) (res any, err error)
 	MaxLength      func(ctx context.Context, obj any, next graphql.Resolver, value *int) (res any, err error)
 	MaxValue       func(ctx context.Context, obj any, next graphql.Resolver, value *int) (res any, err error)
 	MinLength      func(ctx context.Context, obj any, next graphql.Resolver, value *int) (res any, err error)
 	MinValue       func(ctx context.Context, obj any, next graphql.Resolver, value *int) (res any, err error)
-	NotEmptyString func(ctx context.Context, obj any, next graphql.Resolver, value *bool) (res any, err error)
+	NotEmptyString func(ctx context.Context, obj any, next graphql.Resolver, state *bool) (res any, err error)
 }
 
 type ComplexityRoot struct {
@@ -394,6 +395,34 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) dir_authenticated_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.dir_authenticated_argsState(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["state"] = arg0
+	return args, nil
+}
+func (ec *executionContext) dir_authenticated_argsState(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*bool, error) {
+	if _, ok := rawArgs["state"]; !ok {
+		var zeroVal *bool
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
+	if tmp, ok := rawArgs["state"]; ok {
+		return ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+	}
+
+	var zeroVal *bool
+	return zeroVal, nil
+}
+
 func (ec *executionContext) dir_maxLength_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -509,24 +538,24 @@ func (ec *executionContext) dir_minValue_argsValue(
 func (ec *executionContext) dir_notEmptyString_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.dir_notEmptyString_argsValue(ctx, rawArgs)
+	arg0, err := ec.dir_notEmptyString_argsState(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["value"] = arg0
+	args["state"] = arg0
 	return args, nil
 }
-func (ec *executionContext) dir_notEmptyString_argsValue(
+func (ec *executionContext) dir_notEmptyString_argsState(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*bool, error) {
-	if _, ok := rawArgs["value"]; !ok {
+	if _, ok := rawArgs["state"]; !ok {
 		var zeroVal *bool
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
-	if tmp, ok := rawArgs["value"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
+	if tmp, ok := rawArgs["state"]; ok {
 		return ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 	}
 
@@ -783,8 +812,35 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(model.UpdateUser))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(model.UpdateUser))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+			if err != nil {
+				var zeroVal *model.User
+				return zeroVal, err
+			}
+			if ec.directives.Authenticated == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
+			}
+			return ec.directives.Authenticated(ctx, nil, directive0, state)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *TestGoLandProject/graph/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -856,8 +912,35 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteUser(rctx, fc.Args["input"].(model.UserID))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteUser(rctx, fc.Args["input"].(model.UserID))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.Authenticated == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive authenticated is not implemented")
+			}
+			return ec.directives.Authenticated(ctx, nil, directive0, state)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1193,8 +1276,35 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().User(rctx, fc.Args["input"].(model.UserID))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().User(rctx, fc.Args["input"].(model.UserID))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+			if err != nil {
+				var zeroVal *model.User
+				return zeroVal, err
+			}
+			if ec.directives.Authenticated == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
+			}
+			return ec.directives.Authenticated(ctx, nil, directive0, state)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *TestGoLandProject/graph/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1266,8 +1376,35 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Me(rctx)
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Me(rctx)
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+			if err != nil {
+				var zeroVal *model.User
+				return zeroVal, err
+			}
+			if ec.directives.Authenticated == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
+			}
+			return ec.directives.Authenticated(ctx, nil, directive0, state)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *TestGoLandProject/graph/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3606,7 +3743,7 @@ func (ec *executionContext) unmarshalInputCreateUser(ctx context.Context, obj an
 				return ec.directives.MaxLength(ctx, obj, directive1, value)
 			}
 			directive3 := func(ctx context.Context) (any, error) {
-				value, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+				state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
 				if err != nil {
 					var zeroVal string
 					return zeroVal, err
@@ -3615,7 +3752,7 @@ func (ec *executionContext) unmarshalInputCreateUser(ctx context.Context, obj an
 					var zeroVal string
 					return zeroVal, errors.New("directive notEmptyString is not implemented")
 				}
-				return ec.directives.NotEmptyString(ctx, obj, directive2, value)
+				return ec.directives.NotEmptyString(ctx, obj, directive2, state)
 			}
 
 			tmp, err := directive3(ctx)
@@ -3633,7 +3770,7 @@ func (ec *executionContext) unmarshalInputCreateUser(ctx context.Context, obj an
 			directive0 := func(ctx context.Context) (any, error) { return ec.unmarshalNString2string(ctx, v) }
 
 			directive1 := func(ctx context.Context) (any, error) {
-				value, err := ec.unmarshalOInt642ᚖint(ctx, 5)
+				value, err := ec.unmarshalOInt642ᚖint(ctx, 2)
 				if err != nil {
 					var zeroVal string
 					return zeroVal, err
@@ -3657,7 +3794,7 @@ func (ec *executionContext) unmarshalInputCreateUser(ctx context.Context, obj an
 				return ec.directives.MaxLength(ctx, obj, directive1, value)
 			}
 			directive3 := func(ctx context.Context) (any, error) {
-				value, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+				state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
 				if err != nil {
 					var zeroVal string
 					return zeroVal, err
@@ -3666,7 +3803,7 @@ func (ec *executionContext) unmarshalInputCreateUser(ctx context.Context, obj an
 					var zeroVal string
 					return zeroVal, errors.New("directive notEmptyString is not implemented")
 				}
-				return ec.directives.NotEmptyString(ctx, obj, directive2, value)
+				return ec.directives.NotEmptyString(ctx, obj, directive2, state)
 			}
 
 			tmp, err := directive3(ctx)
@@ -3708,7 +3845,7 @@ func (ec *executionContext) unmarshalInputCreateUser(ctx context.Context, obj an
 				return ec.directives.MaxLength(ctx, obj, directive1, value)
 			}
 			directive3 := func(ctx context.Context) (any, error) {
-				value, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+				state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
 				if err != nil {
 					var zeroVal string
 					return zeroVal, err
@@ -3717,7 +3854,7 @@ func (ec *executionContext) unmarshalInputCreateUser(ctx context.Context, obj an
 					var zeroVal string
 					return zeroVal, errors.New("directive notEmptyString is not implemented")
 				}
-				return ec.directives.NotEmptyString(ctx, obj, directive2, value)
+				return ec.directives.NotEmptyString(ctx, obj, directive2, state)
 			}
 
 			tmp, err := directive3(ctx)
@@ -3735,7 +3872,7 @@ func (ec *executionContext) unmarshalInputCreateUser(ctx context.Context, obj an
 			directive0 := func(ctx context.Context) (any, error) { return ec.unmarshalNString2string(ctx, v) }
 
 			directive1 := func(ctx context.Context) (any, error) {
-				value, err := ec.unmarshalOInt642ᚖint(ctx, 250)
+				value, err := ec.unmarshalOInt642ᚖint(ctx, 1000)
 				if err != nil {
 					var zeroVal string
 					return zeroVal, err
@@ -3746,8 +3883,20 @@ func (ec *executionContext) unmarshalInputCreateUser(ctx context.Context, obj an
 				}
 				return ec.directives.MaxLength(ctx, obj, directive0, value)
 			}
+			directive2 := func(ctx context.Context) (any, error) {
+				state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+				if err != nil {
+					var zeroVal string
+					return zeroVal, err
+				}
+				if ec.directives.NotEmptyString == nil {
+					var zeroVal string
+					return zeroVal, errors.New("directive notEmptyString is not implemented")
+				}
+				return ec.directives.NotEmptyString(ctx, obj, directive1, state)
+			}
 
-			tmp, err := directive1(ctx)
+			tmp, err := directive2(ctx)
 			if err != nil {
 				return it, graphql.ErrorOnPath(ctx, err)
 			}
@@ -3813,7 +3962,7 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj an
 				return ec.directives.MaxLength(ctx, obj, directive1, value)
 			}
 			directive3 := func(ctx context.Context) (any, error) {
-				value, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+				state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
 				if err != nil {
 					var zeroVal string
 					return zeroVal, err
@@ -3822,7 +3971,7 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj an
 					var zeroVal string
 					return zeroVal, errors.New("directive notEmptyString is not implemented")
 				}
-				return ec.directives.NotEmptyString(ctx, obj, directive2, value)
+				return ec.directives.NotEmptyString(ctx, obj, directive2, state)
 			}
 
 			tmp, err := directive3(ctx)
@@ -3840,7 +3989,7 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj an
 			directive0 := func(ctx context.Context) (any, error) { return ec.unmarshalNString2string(ctx, v) }
 
 			directive1 := func(ctx context.Context) (any, error) {
-				value, err := ec.unmarshalOInt642ᚖint(ctx, 5)
+				value, err := ec.unmarshalOInt642ᚖint(ctx, 2)
 				if err != nil {
 					var zeroVal string
 					return zeroVal, err
@@ -3864,7 +4013,7 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj an
 				return ec.directives.MaxLength(ctx, obj, directive1, value)
 			}
 			directive3 := func(ctx context.Context) (any, error) {
-				value, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+				state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
 				if err != nil {
 					var zeroVal string
 					return zeroVal, err
@@ -3873,7 +4022,7 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj an
 					var zeroVal string
 					return zeroVal, errors.New("directive notEmptyString is not implemented")
 				}
-				return ec.directives.NotEmptyString(ctx, obj, directive2, value)
+				return ec.directives.NotEmptyString(ctx, obj, directive2, state)
 			}
 
 			tmp, err := directive3(ctx)
@@ -3915,7 +4064,7 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj an
 				return ec.directives.MaxLength(ctx, obj, directive1, value)
 			}
 			directive3 := func(ctx context.Context) (any, error) {
-				value, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+				state, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
 				if err != nil {
 					var zeroVal string
 					return zeroVal, err
@@ -3924,7 +4073,7 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj an
 					var zeroVal string
 					return zeroVal, errors.New("directive notEmptyString is not implemented")
 				}
-				return ec.directives.NotEmptyString(ctx, obj, directive2, value)
+				return ec.directives.NotEmptyString(ctx, obj, directive2, state)
 			}
 
 			tmp, err := directive3(ctx)

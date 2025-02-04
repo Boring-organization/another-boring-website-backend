@@ -20,6 +20,11 @@ directive @notEmptyString(
     state: Boolean
 ) on INPUT_FIELD_DEFINITION
 
+directive @authenticated(
+    state: Boolean
+) on FIELD_DEFINITION
+
+
 
 type User {
     id:      String!
@@ -43,7 +48,7 @@ type NewUser {
 
 input CreateUser {
     nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString(state: true)
-    login:    String! @minLength(value: 5) @maxLength(value: 100) @notEmptyString(state: true)
+    login:    String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString(state: true)
     password: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
     deviceName: String! @maxLength(value: 1000) @notEmptyString(state: true)
 }
@@ -51,7 +56,7 @@ input CreateUser {
 input UpdateUser {
     id:      String!
     nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString(state: true)
-    login:    String! @minLength(value: 5) @maxLength(value: 100) @notEmptyString(state: true)
+    login:    String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString(state: true)
     password: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
 }
 
@@ -62,12 +67,12 @@ input UserId {
 
 type Query {
     users: [User!]!
-    user(input: UserId!): User!
-    me: User!
+    user(input: UserId!): User! @authenticated(state: true)
+    me: User! @authenticated(state: true)
 }
 
 type Mutation {
     createUser(input: CreateUser!): NewUser!
-    updateUser(input: UpdateUser!): User!
-    deleteUser(input: UserId!): Boolean!
+    updateUser(input: UpdateUser!): User!  @authenticated(state: true)
+    deleteUser(input: UserId!): Boolean! @authenticated(state: true)
 }
