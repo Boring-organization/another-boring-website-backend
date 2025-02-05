@@ -9,14 +9,10 @@ type Database struct {
 	*sql.DB
 }
 
-func InitDb() *sql.DB {
+func InitDb() (*sql.DB, error) {
 	database, err := sql.Open("sqlite3", "store.db")
 
-	if err != nil {
-		panic(err)
-	}
-
-	return database
+	return database, err
 }
 
 func (db *Database) CloseDb() {
@@ -27,24 +23,16 @@ func (db *Database) CloseDb() {
 	}
 }
 
-func (db *Database) ExecuteOperation(query string, args ...any) sql.Result {
+func (db *Database) ExecuteOperation(query string, args ...any) (sql.Result, error) {
 	result, err := db.DB.Exec(query, args...)
 
-	if err != nil {
-		panic(err)
-	}
-
-	return result
+	return result, err
 }
 
-func (db *Database) Query(query string, args ...any) *sql.Rows {
+func (db *Database) Query(query string, args ...any) (*sql.Rows, error) {
 	rows, err := db.DB.Query(query, args...)
 
-	if err != nil {
-		panic(err)
-	}
-
-	return rows
+	return rows, err
 }
 
 func (db *Database) QueryRow(query string, args ...any) *sql.Row {

@@ -18,95 +18,116 @@ import (
 )
 
 // CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUser) (*model.NewUser, error) {
-	id := uuid.New()
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUser) (*model.User, error) {
+	ginContext, err := utils.GinContextFromContext(ctx)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+	}
 
-	newUser := model.NewUser{
-		ID:       id.String(),
-		Nickname: input.Nickname,
-		Login:    input.Login,
-		Password: input.Password,
-		Token:    "",
+	id := uuid.New()
+	timeNow := int(time.Now().UnixMilli())
+
+	newUser := model.User{
+		ID:           id.String(),
+		Nickname:     input.Nickname,
+		Login:        input.Login,
+		Password:     &input.Password,
+		LastActionAt: timeNow,
+		CreatedAt:    timeNow,
+		IsAdmin:      false,
+		Token:        nil,
 	}
 
 	tokenLiveTime := time.Hour * 24 * 30
 	jwtToken, err := auth.GenerateJwt(id.String(), tokenLiveTime)
-
 	if err != nil {
-		return nil, err
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't generate token")
 	}
 
-	r.Database.ExecuteOperation("insert into User (id, nickname, login, password, created_at) values ($1, $2, $3, $4, $5)", newUser.ID, newUser.Nickname, newUser.Login, newUser.Password, time.Now().UnixMilli())
-	r.Database.ExecuteOperation("insert into Auth_data (token, user_id, device_name, used_at, expired_at) values ($1, $2, $3, $4, $5)", jwtToken, id.String(), input.DeviceName, time.Now().UnixMilli(), time.Now().Add(tokenLiveTime).UnixMilli())
+	_, err = r.Database.ExecuteOperation("insert into User (id, nickname, login, password, email, created_at, last_action_at) values ($1, $2, $3, $4, $5, $6, $7)", newUser.ID, newUser.Nickname, newUser.Login, newUser.Password, newUser.Email, timeNow, timeNow)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't add new user to database")
+	}
 
-	newUser.Token = jwtToken
+	_, err = r.Database.ExecuteOperation("insert into Auth_data (token, user_id, device_name, used_at, expired_at) values ($1, $2, $3, $4, $5)", jwtToken, id.String(), input.DeviceName, timeNow, time.Now().Add(tokenLiveTime).UnixMilli())
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't add auth data to database")
+	}
+
+	newUser.Token = &jwtToken
 
 	return &newUser, nil
 }
 
 // UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UpdateUser) (*model.User, error) {
+	ginContext, err := utils.GinContextFromContext(ctx)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+	}
+
 	user := model.User{}
 
 	userRow := r.Database.QueryRow("select * from User where id = $1", input.ID)
-	err := userRow.Scan(&user.ID, &user.Nickname, &user.Login, &user.Password)
+	err = userRow.Scan(&user.ID, &user.Nickname, &user.Login, &user.Password, &user.CreatedAt, &user.IsAdmin, &user.DeletedAt)
 
 	if err != nil {
-		return nil, err
+		return nil, utils.ResponseError(ginContext, http.StatusNotFound, "User not found")
 	}
 
-	user = model.User{ID: input.ID, Nickname: input.Nickname, Login: input.Login, Password: input.Password}
-	r.Database.ExecuteOperation("update User set nickname = $1, login = $2, password = $3 where id = $4;", user.Nickname, user.Login, user.Password, user.ID)
+	timeNow := int(time.Now().UnixMilli())
+	user = model.User{ID: input.ID, Nickname: input.Nickname, Login: input.Login, LastActionAt: timeNow, EditedAt: &timeNow}
+	_, err = r.Database.ExecuteOperation("update User set nickname = $1, login = $2, password = $3, edited_at = $4, last_action_at = $5 where id = $6;", user.Nickname, user.Login, user.Password, user.EditedAt, user.LastActionAt, user.ID)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't update user data in database")
+	}
 
 	return &user, nil
 }
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, input model.UserID) (bool, error) {
+	ginContext, err := utils.GinContextFromContext(ctx)
+	if err != nil {
+		return false, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+	}
+
 	user := model.User{}
 
 	userRow := r.Database.QueryRow("select * from User where id = $1", input.ID)
-	err := userRow.Scan(&user.ID, &user.Nickname, &user.Login, &user.Password)
+	err = userRow.Scan(&user.ID, &user.Nickname, &user.Login, &user.Password)
 
+	if err != nil {
+		return false, utils.ResponseError(ginContext, http.StatusNotFound, "User not found")
+	}
+
+	timeNow := int(time.Now().UnixMilli())
+	_, err = r.Database.ExecuteOperation("update User set deleted_at = $1, last_action_at = $2 where id = $3", timeNow, timeNow, input.ID)
+	if err != nil {
+		return false, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't delete user")
+	}
+
+	return true, nil
+}
+
+// FriendInviteUser is the resolver for the friendInviteUser field.
+func (r *mutationResolver) FriendInviteUser(ctx context.Context, input model.UserID) (bool, error) {
+	ginContext, err := utils.GinContextFromContext(ctx)
+	if err != nil {
+		return false, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+	}
+
+	userId, err := resolverUtils.GetUserIdFromContext(ctx, *r.Database)
 	if err != nil {
 		return false, err
 	}
 
-	r.Database.ExecuteOperation("delete from User where id = $1", input.ID)
-	return true, nil
-}
-
-// Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	users := []*model.User{}
-	dbUsers := r.Database.Query("select * from User")
-
-	for dbUsers.Next() {
-		user := model.User{}
-		err := dbUsers.Scan(&user.ID, &user.Nickname, &user.Login, &user.Password)
-
-		if err != nil {
-			return nil, err
-		}
-
-		users = append(users, &user)
-	}
-
-	return users, nil
-}
-
-// User is the resolver for the user field.
-func (r *queryResolver) User(ctx context.Context, input model.UserID) (*model.User, error) {
-	user := model.User{}
-
-	userRow := r.Database.QueryRow("select * from User where id = $1", input.ID)
-	err := userRow.Scan(&user.ID, &user.Nickname, &user.Login, &user.Password)
-
+	_, err = r.Database.ExecuteOperation("insert into User_friend_link (requester_id, requested_id) values ($1, $2)", *userId, input.ID)
 	if err != nil {
-		return nil, err
+		return false, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't add friend invite")
 	}
 
-	return &user, nil
+	return true, nil
 }
 
 // Me is the resolver for the me field.
@@ -122,14 +143,83 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	}
 
 	user := model.User{}
-	userRow := r.Database.QueryRow("select * from User where id = $1", userId)
-
-	err = userRow.Scan(&user.ID, &user.Nickname, &user.Login, &user.Password, &user.CreatedAt, &user.EditedAt, &user.DeletedAt, &user.IsAdmin)
+	err = resolverUtils.GetUserFromDatabase(*r.Database, &user, *userId)
 	if err != nil {
 		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get user info from database")
 	}
 
 	return &user, nil
+}
+
+// User is the resolver for the user field.
+func (r *queryResolver) User(ctx context.Context, input model.UserID) (*model.User, error) {
+	ginContext, err := utils.GinContextFromContext(ctx)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+	}
+
+	user := model.User{}
+	err = resolverUtils.GetUserFromDatabase(*r.Database, &user, input.ID)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get user info from database or user not found")
+	}
+
+	return &user, nil
+}
+
+// MyFriends is the resolver for the myFriends field.
+func (r *queryResolver) MyFriends(ctx context.Context) ([]*model.User, error) {
+	ginContext, err := utils.GinContextFromContext(ctx)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+	}
+
+	userId, err := resolverUtils.GetUserIdFromContext(ctx, *r.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	return resolverUtils.GetUserFriends(ctx, *userId, *r.Database)
+}
+
+// MyFriendRequests is the resolver for the myFriendRequests field.
+func (r *queryResolver) MyFriendRequests(ctx context.Context) ([]*model.User, error) {
+	ginContext, err := utils.GinContextFromContext(ctx)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+	}
+
+	userId, err := resolverUtils.GetUserIdFromContext(ctx, *r.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	return resolverUtils.GetUserFriendRequests(ctx, *userId, *r.Database)
+}
+
+// MyFriendInvites is the resolver for the myFriendInvites field.
+func (r *queryResolver) MyFriendInvites(ctx context.Context) ([]*model.User, error) {
+	ginContext, err := utils.GinContextFromContext(ctx)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+	}
+
+	userId, err := resolverUtils.GetUserIdFromContext(ctx, *r.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	return resolverUtils.GetUserFriendInvites(ctx, *userId, *r.Database)
+}
+
+// UserFriends is the resolver for the userFriends field.
+func (r *queryResolver) UserFriends(ctx context.Context, input model.UserID) ([]*model.User, error) {
+	ginContext, err := utils.GinContextFromContext(ctx)
+	if err != nil {
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+	}
+
+	return resolverUtils.GetUserFriends(ctx, input.ID, *r.Database)
 }
 
 // Mutation returns graph.MutationResolver implementation.

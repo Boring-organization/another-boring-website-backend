@@ -6,18 +6,11 @@ type CreateUser struct {
 	Nickname   string `json:"nickname"`
 	Login      string `json:"login"`
 	Password   string `json:"password"`
+	Email      string `json:"email"`
 	DeviceName string `json:"deviceName"`
 }
 
 type Mutation struct {
-}
-
-type NewUser struct {
-	ID       string `json:"id"`
-	Nickname string `json:"nickname"`
-	Login    string `json:"login"`
-	Password string `json:"password"`
-	Token    string `json:"token"`
 }
 
 type Query struct {
@@ -27,18 +20,21 @@ type UpdateUser struct {
 	ID       string `json:"id"`
 	Nickname string `json:"nickname"`
 	Login    string `json:"login"`
-	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
 type User struct {
-	ID        string `json:"id"`
-	Nickname  string `json:"nickname"`
-	Login     string `json:"login"`
-	Password  string `json:"password"`
-	CreatedAt int    `json:"createdAt"`
-	EditedAt  *int   `json:"editedAt,omitempty"`
-	DeletedAt *int   `json:"deletedAt,omitempty"`
-	IsAdmin   bool   `json:"isAdmin"`
+	ID           string  `json:"id"`
+	Nickname     string  `json:"nickname"`
+	Login        string  `json:"login"`
+	Password     *string `json:"password,omitempty"`
+	Email        string  `json:"email"`
+	LastActionAt int     `json:"lastActionAt"`
+	CreatedAt    int     `json:"createdAt"`
+	EditedAt     *int    `json:"editedAt,omitempty"`
+	DeletedAt    *int    `json:"deletedAt,omitempty"`
+	IsAdmin      bool    `json:"isAdmin"`
+	Token        *string `json:"token,omitempty"`
 }
 
 type UserID struct {

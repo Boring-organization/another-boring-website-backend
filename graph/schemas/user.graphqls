@@ -20,36 +20,36 @@ directive @notEmptyString(
     state: Boolean
 ) on INPUT_FIELD_DEFINITION
 
+directive @email(
+    state: Boolean
+) on INPUT_FIELD_DEFINITION
+
 directive @authenticated(
     state: Boolean
 ) on FIELD_DEFINITION
-
-
 
 type User {
     id:      String!
     nickname: String!
     login:    String!
-    password: String!
+    password: String
+    email:    String!
+    lastActionAt: Int64!
     createdAt: Int64!
     editedAt: Int64
     deletedAt: Int64
     isAdmin: Boolean!
 }
 
-type NewUser {
-    id:      String!
-    nickname: String!
-    login:    String!
-    password: String!
-    token:  String!
+extend type User {
+    token:  String
 }
-
 
 input CreateUser {
     nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString(state: true)
     login:    String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString(state: true)
     password: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
+    email:    String! @maxLength(value: 100) @notEmptyString(state: true) @email(state: true)
     deviceName: String! @maxLength(value: 1000) @notEmptyString(state: true)
 }
 
@@ -57,22 +57,25 @@ input UpdateUser {
     id:      String!
     nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString(state: true)
     login:    String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString(state: true)
-    password: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
+    email:    String! @maxLength(value: 100) @notEmptyString(state: true) @email(state: true)
 }
 
 input UserId {
-    id:      String!
-}
-
-
-type Query {
-    users: [User!]!
-    user(input: UserId!): User! @authenticated(state: true)
-    me: User! @authenticated(state: true)
+    id:      String! @maxLength(value: 100)
 }
 
 type Mutation {
-    createUser(input: CreateUser!): NewUser!
+    createUser(input: CreateUser!): User!
     updateUser(input: UpdateUser!): User!  @authenticated(state: true)
     deleteUser(input: UserId!): Boolean! @authenticated(state: true)
+    friendInviteUser(input: UserId!): Boolean! @authenticated(state: true)
+}
+
+type Query {
+    me: User! @authenticated(state: true)
+    user(input: UserId!): User! @authenticated(state: true)
+    myFriends: [User!] @authenticated(state: true)
+    myFriendRequests: [User!] @authenticated(state: true)
+    myFriendInvites: [User!] @authenticated(state: true)
+    userFriends(input: UserId!): [User!] @authenticated(state: true)
 }

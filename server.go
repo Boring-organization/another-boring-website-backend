@@ -87,9 +87,14 @@ func main() {
 		fmt.Println("[GraphQL] Skip schema generation\n")
 	}
 
-	databaseInstance := database.Database{database.InitDb()}
+	initializedDatabase, err := database.InitDb()
+	if err != nil {
+		panic(err)
+	}
 
-	resolverInstance := &resolver.Resolver{&databaseInstance}
+	databaseInstance := database.Database{DB: initializedDatabase}
+
+	resolverInstance := &resolver.Resolver{Database: &databaseInstance}
 	defer resolverInstance.CloseDb()
 
 	ginRouter := gin.Default()
