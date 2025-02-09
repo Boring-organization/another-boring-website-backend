@@ -1,0 +1,19 @@
+type PostComment {
+    id: String!
+    author: User!
+    post: Post!
+    text: String!
+    likeCount: Int64!
+    createdAt: Int64!
+    deletedAt: Int64
+}
+
+input NewPostComment {
+    text: String! @maxLength(value: 10000)
+    postId: String! @maxLength(value: 100) @notEmptyString(state: true)
+}
+
+extend type Mutation {
+    createPostComment(postIdHolder: IdHolder!, comment: NewPostComment!): PostComment! @authenticated(state: true)
+    deletePostComment(commentIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+}

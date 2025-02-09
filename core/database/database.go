@@ -10,7 +10,7 @@ type Database struct {
 }
 
 func InitDb() (*sql.DB, error) {
-	database, err := sql.Open("sqlite3", "store.db")
+	database, err := sql.Open("sqlite3", "store")
 
 	return database, err
 }

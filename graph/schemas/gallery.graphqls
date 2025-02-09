@@ -1,0 +1,21 @@
+type Gallery {
+    id: String!
+    name: String!
+    author: User!
+    createdAt: Int64!
+    editedAt: Int64
+    deletedAt: Int64
+    isClosed: Boolean!
+    images: [Image!]!
+}
+
+input  NewGallery {
+    name: String!
+    isClosed: Boolean!
+}
+
+extend type Query {
+    getCatalog(catalog: Catalogs): Catalog @authenticated(state: true)
+    getCatalogItems(catalog: Catalogs): [CatalogItem!]! @authenticated(state: true)
+    getCatalogItem(catalogItemCode: String!): CatalogItem! @authenticated(state: true)
+}

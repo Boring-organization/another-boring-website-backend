@@ -1,0 +1,58 @@
+scalar Int64
+
+directive @maxLength(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @minLength(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @maxArrayLength(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @minArrayLength(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @maxValue(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @minValue(
+    value: Int64
+) on INPUT_FIELD_DEFINITION
+
+directive @notEmptyString(
+    state: Boolean
+) on INPUT_FIELD_DEFINITION
+
+directive @email(
+    state: Boolean
+) on INPUT_FIELD_DEFINITION
+
+directive @catalogItemCode(
+    catalog: Catalogs
+) on INPUT_FIELD_DEFINITION
+
+directive @authenticated(
+    state: Boolean
+) on FIELD_DEFINITION
+
+input IdHolder {
+    id: String! @maxLength(value: 100) @notEmptyString(state: true)
+}
+
+type DeleteResult {
+    isDeleted: Boolean!
+}
+
+type Mutation {
+    mutation: String
+}
+
+type Query {
+    query: String
+}
+

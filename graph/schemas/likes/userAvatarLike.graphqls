@@ -1,0 +1,8 @@
+input UserAvatarLikeData {
+    authorId: String! @maxLength(value: 100) @notEmptyString(state: true)
+    userAvatarImageId: String! @maxLength(value: 100) @notEmptyString(state: true)
+}
+
+extend type Mutation  {
+    likeUserAvatarImagePost(likeData: UserAvatarLikeData!): LikeState! @authenticated(state: true)
+}

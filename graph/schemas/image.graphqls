@@ -1,0 +1,8 @@
+type Image {
+    id: String!
+    path: String!
+    size: Int64!
+    createdAt: Int64!
+    deletedAt: Int64
+}
+

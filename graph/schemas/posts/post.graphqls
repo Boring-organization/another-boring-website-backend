@@ -1,0 +1,33 @@
+type Post {
+    id: String!
+    text: String!
+    author: User!
+    createdAt: Int64!
+    editedAt: Int64
+    deletedAt: Int64
+    likeCount: Int64!
+    images: [Image!]!
+    comments: [PostComment!]!
+}
+
+input NewPost {
+    text: String! @maxLength(value: 10000)
+    imageIds: [String!]! @maxArrayLength(value: 10)
+}
+
+input UpdatePost {
+    text: String! @maxLength(value: 10000)
+    imageIds: [String!]! @maxArrayLength(value: 10)
+}
+
+extend type Mutation {
+    createPost(newPost: NewPost!): Post! @authenticated(state: true)
+    updatePost(newPostData: UpdatePost!): Post! @authenticated(state: true)
+    deletePost(postIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+}
+
+extend type Query {
+    getPost(postIdHolder: IdHolder!): Post! @authenticated(state: true)
+    getMyPosts(paginationSettings: ListPaginationSettings!): [Post!]! @authenticated(state: true)
+
+}

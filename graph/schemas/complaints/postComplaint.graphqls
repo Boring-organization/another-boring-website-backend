@@ -1,0 +1,26 @@
+type PostComplaint implements Complaint{
+    id: String!
+    author: User!
+    post: Post!
+    text: String!
+    createdAt: Int64!
+    deletedAt: Int64
+    violationTypeCode: String!
+    complaintStatus: ComplaintStatus!
+}
+
+input NewPostComplaint {
+    text: String! @maxLength(value: 10000)
+    violationTypeCode: String! @maxLength(value: 100) @notEmptyString(state: true)
+}
+
+extend type Mutation {
+    createPostComplaint(postIdHolder: IdHolder!, newComplaint: NewPostComplaint!): PostComplaint! @authenticated(state: true)
+    deletePostComplaint(complaintIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+}
+
+extend type Query {
+    getMyActivePostComplaints: [PostComplaint!]! @authenticated(state: true)
+    getMyClosedPostComplaints: [PostComplaint!]! @authenticated(state: true)
+    getMyRefusedPostComplaints: [PostComplaint!]! @authenticated(state: true)
+}

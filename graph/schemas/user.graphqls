@@ -1,32 +1,7 @@
-scalar Int64
 
-directive @maxLength(
-    value: Int64
-) on INPUT_FIELD_DEFINITION
-
-directive @minLength(
-    value: Int64
-) on INPUT_FIELD_DEFINITION
-
-directive @maxValue(
-    value: Int64
-) on INPUT_FIELD_DEFINITION
-
-directive @minValue(
-    value: Int64
-) on INPUT_FIELD_DEFINITION
-
-directive @notEmptyString(
-    state: Boolean
-) on INPUT_FIELD_DEFINITION
-
-directive @email(
-    state: Boolean
-) on INPUT_FIELD_DEFINITION
-
-directive @authenticated(
-    state: Boolean
-) on FIELD_DEFINITION
+type Token {
+    token:  String!
+}
 
 type User {
     id:      String!
@@ -60,22 +35,30 @@ input UpdateUser {
     email:    String! @maxLength(value: 100) @notEmptyString(state: true) @email(state: true)
 }
 
-input UserId {
-    id:      String! @maxLength(value: 100)
+input NewPassword {
+    oldPassword: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
+    newPassword: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
 }
 
-type Mutation {
-    createUser(input: CreateUser!): User!
-    updateUser(input: UpdateUser!): User!  @authenticated(state: true)
-    deleteUser(input: UserId!): Boolean! @authenticated(state: true)
-    friendInviteUser(input: UserId!): Boolean! @authenticated(state: true)
+input NewEmail {
+    oldEmail: String! @maxLength(value: 100) @notEmptyString(state: true) @email(state: true)
+    newEmail: String! @maxLength(value: 100) @notEmptyString(state: true) @email(state: true)
 }
 
-type Query {
+extend type Mutation {
+    createUser(newUser: CreateUser!): User!
+    updateUser(newUserData: UpdateUser!): User!  @authenticated(state: true)
+    deleteUser(userIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+    friendInviteUser(userIdHolder: IdHolder!): Boolean! @authenticated(state: true)
+    changePassword(passwordData: NewPassword!): Token! @authenticated(state: true)
+    changeEmail(emailData: NewEmail!): Token! @authenticated(state: true)
+}
+
+extend type Query {
     me: User! @authenticated(state: true)
-    user(input: UserId!): User! @authenticated(state: true)
-    myFriends: [User!] @authenticated(state: true)
-    myFriendRequests: [User!] @authenticated(state: true)
-    myFriendInvites: [User!] @authenticated(state: true)
-    userFriends(input: UserId!): [User!] @authenticated(state: true)
+    user(userIdHolder: IdHolder!): User! @authenticated(state: true)
+    myFriends: [User!]! @authenticated(state: true)
+    myFriendRequests: [User!]! @authenticated(state: true)
+    myFriendInvites: [User!]! @authenticated(state: true)
+    userFriends(userIdHolder: IdHolder!): [User!]! @authenticated(state: true)
 }

@@ -1,0 +1,8 @@
+input GalleryLikeData {
+    authorId: String! @maxLength(value: 100) @notEmptyString(state: true)
+    galleryId: String! @maxLength(value: 100) @notEmptyString(state: true)
+}
+
+extend type Mutation  {
+    likeGalleryPost(likeData: GalleryLikeData!): LikeState! @authenticated(state: true)
+}

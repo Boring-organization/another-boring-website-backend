@@ -1,0 +1,26 @@
+type CatalogItem {
+    id: String!
+    code: String!
+    value: String!
+    text: String!
+    catalog_id: String!
+    isActive: Boolean!
+}
+
+type Catalog {
+    id: String!
+    name: String!
+    isActive: Boolean!
+}
+
+
+enum Catalogs  {
+    violationType
+    kink
+}
+
+extend type Query {
+    getCatalog(catalog: Catalogs): Catalog @authenticated(state: true)
+    getCatalogItems(catalog: Catalogs): [CatalogItem!]! @authenticated(state: true)
+    getCatalogItem(catalogItemCode: String!): CatalogItem! @authenticated(state: true)
+}

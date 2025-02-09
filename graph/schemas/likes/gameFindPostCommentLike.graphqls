@@ -1,0 +1,8 @@
+input GameFindPostCommentLikeData {
+    authorId: String! @maxLength(value: 100) @notEmptyString(state: true)
+    gameFindPostCommentId: String! @maxLength(value: 100) @notEmptyString(state: true)
+}
+
+extend type Mutation  {
+    likeGameFindPostCommentPost(likeData: GameFindPostCommentLikeData!): LikeState! @authenticated(state: true)
+}

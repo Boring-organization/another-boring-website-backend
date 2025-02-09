@@ -1,0 +1,19 @@
+type Dialog {
+    id: String!
+    userDialogWith: User!
+    isNotificationOn: Boolean!
+    lastMessage: Message!
+}
+
+input ToggleNotificationData {
+    state: Boolean!
+}
+
+extend type Mutation {
+    deleteDialog(dialogIdHolder: IdHolder): DeleteResult! @authenticated(state: true)
+    toggleDialogNotification(stateHolder: ToggleNotificationData): Boolean! @authenticated(state: true)
+}
+
+extend type Query {
+    getMyDialogs(paginationSettings: ListPaginationSettings!): [Dialog!]! @authenticated(state: true)
+}

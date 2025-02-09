@@ -7,10 +7,10 @@ package resolver
 import (
 	"TestGoLandProject/core/auth"
 	"TestGoLandProject/core/utils"
-	"TestGoLandProject/graph"
 	"TestGoLandProject/graph/model"
 	resolverUtils "TestGoLandProject/graph/resolvers/utils"
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -18,7 +18,7 @@ import (
 )
 
 // CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUser) (*model.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, newUser model.CreateUser) (*model.User, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
 		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
@@ -60,7 +60,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 }
 
 // UpdateUser is the resolver for the updateUser field.
-func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UpdateUser) (*model.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, newUserData model.UpdateUser) (*model.User, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
 		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
@@ -86,7 +86,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UpdateUse
 }
 
 // DeleteUser is the resolver for the deleteUser field.
-func (r *mutationResolver) DeleteUser(ctx context.Context, input model.UserID) (bool, error) {
+func (r *mutationResolver) DeleteUser(ctx context.Context, userIDHolder model.IDHolder) (*model.DeleteResult, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
 		return false, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
@@ -111,7 +111,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input model.UserID) (
 }
 
 // FriendInviteUser is the resolver for the friendInviteUser field.
-func (r *mutationResolver) FriendInviteUser(ctx context.Context, input model.UserID) (bool, error) {
+func (r *mutationResolver) FriendInviteUser(ctx context.Context, userIDHolder model.IDHolder) (bool, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
 		return false, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
@@ -128,6 +128,16 @@ func (r *mutationResolver) FriendInviteUser(ctx context.Context, input model.Use
 	}
 
 	return true, nil
+}
+
+// ChangePassword is the resolver for the changePassword field.
+func (r *mutationResolver) ChangePassword(ctx context.Context, passwordData model.NewPassword) (*model.Token, error) {
+	panic(fmt.Errorf("not implemented: ChangePassword - changePassword"))
+}
+
+// ChangeEmail is the resolver for the changeEmail field.
+func (r *mutationResolver) ChangeEmail(ctx context.Context, emailData model.NewEmail) (*model.Token, error) {
+	panic(fmt.Errorf("not implemented: ChangeEmail - changeEmail"))
 }
 
 // Me is the resolver for the me field.
@@ -152,7 +162,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 }
 
 // User is the resolver for the user field.
-func (r *queryResolver) User(ctx context.Context, input model.UserID) (*model.User, error) {
+func (r *queryResolver) User(ctx context.Context, userIDHolder model.IDHolder) (*model.User, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
 		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
@@ -213,7 +223,7 @@ func (r *queryResolver) MyFriendInvites(ctx context.Context) ([]*model.User, err
 }
 
 // UserFriends is the resolver for the userFriends field.
-func (r *queryResolver) UserFriends(ctx context.Context, input model.UserID) ([]*model.User, error) {
+func (r *queryResolver) UserFriends(ctx context.Context, userIDHolder model.IDHolder) ([]*model.User, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
 		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
@@ -221,12 +231,3 @@ func (r *queryResolver) UserFriends(ctx context.Context, input model.UserID) ([]
 
 	return resolverUtils.GetUserFriends(ctx, input.ID, *r.Database)
 }
-
-// Mutation returns graph.MutationResolver implementation.
-func (r *Resolver) Mutation() graph.MutationResolver { return &mutationResolver{r} }
-
-// Query returns graph.QueryResolver implementation.
-func (r *Resolver) Query() graph.QueryResolver { return &queryResolver{r} }
-
-type mutationResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }

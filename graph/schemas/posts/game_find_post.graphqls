@@ -1,0 +1,38 @@
+type GameFindPost {
+    id: String!
+    text: String!
+    author: User!
+    createdAt: Int64!
+    editedAt: Int64
+    deletedAt: Int64
+    likeCount: Int64!
+    images: [Image!]!
+    comments: [GameFindPostComment!]!
+    isAnonymously: Boolean!
+    isLikable: Boolean!
+}
+
+input NewGameFindPost {
+    text: String! @maxLength(value: 10000)
+    imageIds: [String!]! @maxArrayLength(value: 10)
+    isAnonymously: Boolean!
+    isLikable: Boolean!
+}
+
+input UpdateGameFindPost {
+    text: String! @maxLength(value: 10000)
+    imageIds: [String!]! @maxArrayLength(value: 10)
+    isAnonymously: Boolean!
+    isLikable: Boolean!
+}
+
+extend type Mutation {
+    createGameFindPost(newGameFindPost: NewGameFindPost!): GameFindPost! @authenticated(state: true)
+    updateGameFindPost(newGameFindPostData: UpdateGameFindPost!): GameFindPost! @authenticated(state: true)
+    deleteGameFindPost(gameFindPostIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+}
+
+extend type Query {
+    getGameFindPost(gameFindPostIdHolder: IdHolder!): GameFindPost! @authenticated(state: true)
+    getMyGameFindPosts(paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated(state: true)
+}

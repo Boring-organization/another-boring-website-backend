@@ -1,0 +1,25 @@
+type Message {
+    id: String!
+    authorId: String!
+    isYourMessage: Boolean!
+    createdAt: Int64!
+    editedAt: Int64
+    deletedAt: Int64
+    linkedGameFindPost: GameFindPost
+}
+
+input NewMessage {
+    dialogId: String! @maxLength(value: 100) @notEmptyString(state: true)
+    text: String @maxLength(value: 10000)
+    imageIds: [String!]! @maxLength(value: 100) @notEmptyString(state: true)
+    linkedGameFindPostId: String @maxLength(value: 100) @notEmptyString(state: true)
+}
+
+extend type Mutation {
+    createMessage(newMessage: NewMessage): Message! @authenticated(state: true)
+    deleteMessage(messageIdHolder: IdHolder): DeleteResult! @authenticated(state: true)
+}
+
+extend type Query {
+    getMessages(paginationSettings: ListPaginationSettings!, dialogIdHolder: IdHolder): [Dialog!]! @authenticated(state: true)
+}
