@@ -16,11 +16,11 @@ enum ComplaintStatus {
 
 input NewComplaint {
     text: String! @maxLength(value: 10000)
-    violationTypeCode: String! @maxLength(value: 100) @notEmptyString(state: true)
+    violationTypeCode: String! @maxLength(value: 100) @notEmptyString
 }
 
 extend type Query {
-    getMyActiveComplaints: [Complaint!]! @authenticated(state: true)
-    getMyClosedComplaints: [Complaint!]! @authenticated(state: true)
-    getMyRefusedComplaints: [Complaint!]! @authenticated(state: true)
+    getMyActiveComplaints: [Complaint!]! @authenticated
+    getMyClosedComplaints: [Complaint!]! @authenticated
+    getMyRefusedComplaints: [Complaint!]! @authenticated
 }

@@ -11,16 +11,16 @@ type UserComplaint implements Complaint{
 
 input NewUserComplaint {
     text: String! @maxLength(value: 10000)
-    violationTypeCode: String! @maxLength(value: 100) @notEmptyString(state: true)
+    violationTypeCode: String! @maxLength(value: 100) @notEmptyString
 }
 
 extend type Mutation {
-    createUserComplaint(postIdHolder: IdHolder!, newComplaint: NewUserComplaint!): UserComplaint! @authenticated(state: true)
-    deleteUserComplaint(complaintIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+    createUserComplaint(postIdHolder: IdHolder!, newComplaint: NewUserComplaint!): UserComplaint! @authenticated
+    deleteUserComplaint(complaintIdHolder: IdHolder!): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getMyActiveUserComplaints: [UserComplaint!]! @authenticated(state: true)
-    getMyClosedUserComplaints: [UserComplaint!]! @authenticated(state: true)
-    getMyRefusedUserComplaints: [UserComplaint!]! @authenticated(state: true)
+    getMyActiveUserComplaints: [UserComplaint!]! @authenticated
+    getMyClosedUserComplaints: [UserComplaint!]! @authenticated
+    getMyRefusedUserComplaints: [UserComplaint!]! @authenticated
 }

@@ -22,18 +22,12 @@ directive @minValue(
     value: Int64
 ) on INPUT_FIELD_DEFINITION
 
-directive @notEmptyString(
-    state: Boolean
-) on INPUT_FIELD_DEFINITION
+directive @notEmptyString on INPUT_FIELD_DEFINITION
 
-directive @email(
-    state: Boolean
-) on INPUT_FIELD_DEFINITION
+directive @email on INPUT_FIELD_DEFINITION
+
+directive @authenticated on FIELD_DEFINITION
 
 directive @catalogItemCode(
     catalog: Catalogs
 ) on INPUT_FIELD_DEFINITION
-
-directive @authenticated(
-    state: Boolean
-) on FIELD_DEFINITION

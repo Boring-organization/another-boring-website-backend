@@ -19,7 +19,7 @@ enum Catalogs  {
 }
 
 extend type Query {
-    getCatalog(catalog: Catalogs): Catalog @authenticated(state: true)
-    getCatalogItems(catalog: Catalogs): [CatalogItem!]! @authenticated(state: true)
-    getCatalogItem(catalogItemCode: String!): CatalogItem! @authenticated(state: true)
+    getCatalog(catalog: Catalogs): Catalog @authenticated
+    getCatalogItems(catalog: Catalogs): [CatalogItem!]! @authenticated
+    getCatalogItem(catalogItemCode: String!): CatalogItem! @authenticated
 }

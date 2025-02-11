@@ -22,7 +22,7 @@ func GinContextFromContext(ctx context.Context) (*gin.Context, error) {
 	return gc, nil
 }
 
-func ResponseError(ginContext *gin.Context, status int, message string) *gqlerror.Error {
+func ResponseError(ginContext *gin.Context, status int, err error) *gqlerror.Error {
 	ginContext.Status(status)
-	return gqlerror.Errorf(message)
+	return gqlerror.Errorf(err.Error())
 }

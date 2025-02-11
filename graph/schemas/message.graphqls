@@ -9,17 +9,17 @@ type Message {
 }
 
 input NewMessage {
-    dialogId: String! @maxLength(value: 100) @notEmptyString(state: true)
+    dialogId: String! @maxLength(value: 100) @notEmptyString
     text: String @maxLength(value: 10000)
-    imageIds: [String!]! @maxLength(value: 100) @notEmptyString(state: true)
-    linkedGameFindPostId: String @maxLength(value: 100) @notEmptyString(state: true)
+    imageIds: [String!]! @maxLength(value: 100) @notEmptyString
+    linkedGameFindPostId: String @maxLength(value: 100) @notEmptyString
 }
 
 extend type Mutation {
-    createMessage(newMessage: NewMessage): Message! @authenticated(state: true)
-    deleteMessage(messageIdHolder: IdHolder): DeleteResult! @authenticated(state: true)
+    createMessage(newMessage: NewMessage): Message! @authenticated
+    deleteMessage(messageIdHolder: IdHolder): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getMessages(paginationSettings: ListPaginationSettings!, dialogIdHolder: IdHolder): [Dialog!]! @authenticated(state: true)
+    getMessages(paginationSettings: ListPaginationSettings!, dialogIdHolder: IdHolder): [Dialog!]! @authenticated
 }

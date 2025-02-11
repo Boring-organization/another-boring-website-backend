@@ -1,7 +1,7 @@
 scalar Int64
 
 input IdHolder {
-    id: String! @maxLength(value: 100) @notEmptyString(state: true)
+    id: String! @maxLength(value: 100) @notEmptyString
 }
 
 type DeleteResult {

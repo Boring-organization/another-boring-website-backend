@@ -10,10 +10,10 @@ input ToggleNotificationData {
 }
 
 extend type Mutation {
-    deleteDialog(dialogIdHolder: IdHolder): DeleteResult! @authenticated(state: true)
-    toggleDialogNotification(stateHolder: ToggleNotificationData): Boolean! @authenticated(state: true)
+    deleteDialog(dialogIdHolder: IdHolder): DeleteResult! @authenticated
+    toggleDialogNotification(stateHolder: ToggleNotificationData): Boolean! @authenticated
 }
 
 extend type Query {
-    getMyDialogs(paginationSettings: ListPaginationSettings!): [Dialog!]! @authenticated(state: true)
+    getMyDialogs(paginationSettings: ListPaginationSettings!): [Dialog!]! @authenticated
 }

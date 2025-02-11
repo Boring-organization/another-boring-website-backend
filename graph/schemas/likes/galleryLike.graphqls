@@ -1,8 +1,8 @@
 input GalleryLikeData {
-    authorId: String! @maxLength(value: 100) @notEmptyString(state: true)
-    galleryId: String! @maxLength(value: 100) @notEmptyString(state: true)
+    authorId: String! @maxLength(value: 100) @notEmptyString
+    galleryId: String! @maxLength(value: 100) @notEmptyString
 }
 
 extend type Mutation  {
-    likeGalleryPost(likeData: GalleryLikeData!): LikeState! @authenticated(state: true)
+    likeGalleryPost(likeData: GalleryLikeData!): LikeState! @authenticated
 }

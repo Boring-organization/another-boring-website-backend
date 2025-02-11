@@ -1,8 +1,8 @@
 input PostCommentLikeData {
-    authorId: String! @maxLength(value: 100) @notEmptyString(state: true)
-    postCommentId: String! @maxLength(value: 100) @notEmptyString(state: true)
+    authorId: String! @maxLength(value: 100) @notEmptyString
+    postCommentId: String! @maxLength(value: 100) @notEmptyString
 }
 
 extend type Mutation  {
-    likePostCommentPost(likeData: PostCommentLikeData!): LikeState! @authenticated(state: true)
+    likePostCommentPost(likeData: PostCommentLikeData!): LikeState! @authenticated
 }

@@ -10,10 +10,10 @@ type PostComment {
 
 input NewPostComment {
     text: String! @maxLength(value: 10000)
-    postId: String! @maxLength(value: 100) @notEmptyString(state: true)
+    postId: String! @maxLength(value: 100) @notEmptyString
 }
 
 extend type Mutation {
-    createPostComment(postIdHolder: IdHolder!, comment: NewPostComment!): PostComment! @authenticated(state: true)
-    deletePostComment(commentIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+    createPostComment(postIdHolder: IdHolder!, comment: NewPostComment!): PostComment! @authenticated
+    deletePostComment(commentIdHolder: IdHolder!): DeleteResult! @authenticated
 }

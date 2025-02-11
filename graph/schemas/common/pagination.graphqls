@@ -1,7 +1,7 @@
 input ListPaginationSettings {
     count: Int64! @minLength(value: 1)
     startWith: Int64! @minLength(value: 0)
-    lastItemId: String! @maxLength(value: 100) @notEmptyString(state: true)
+    lastItemId: String! @maxLength(value: 100) @notEmptyString
 }
 
 input PagePaginationSettings {

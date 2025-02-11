@@ -11,16 +11,16 @@ type GameFindPostComplaint implements Complaint{
 
 input NewGameFindPostComplaint {
     text: String! @maxLength(value: 10000)
-    violationTypeCode: String! @maxLength(value: 100) @notEmptyString(state: true)
+    violationTypeCode: String! @maxLength(value: 100) @notEmptyString
 }
 
 extend type Mutation {
-    createGameFindPostComplaint(gameFindPostIdHolder: IdHolder!, newComplaint: NewGameFindPostComplaint!): GameFindPostComplaint! @authenticated(state: true)
-    deleteGameFindPostComplaint(complaintIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+    createGameFindPostComplaint(gameFindPostIdHolder: IdHolder!, newComplaint: NewGameFindPostComplaint!): GameFindPostComplaint! @authenticated
+    deleteGameFindPostComplaint(complaintIdHolder: IdHolder!): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getMyActiveGameFindPostComplaints: [GameFindPostComplaint!]! @authenticated(state: true)
-    getMyClosedGameFindPostComplaints: [GameFindPostComplaint!]! @authenticated(state: true)
-    getMyRefusedGameFindPostComplaints: [GameFindPostComplaint!]! @authenticated(state: true)
+    getMyActiveGameFindPostComplaints: [GameFindPostComplaint!]! @authenticated
+    getMyClosedGameFindPostComplaints: [GameFindPostComplaint!]! @authenticated
+    getMyRefusedGameFindPostComplaints: [GameFindPostComplaint!]! @authenticated
 }

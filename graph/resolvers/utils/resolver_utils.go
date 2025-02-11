@@ -31,19 +31,19 @@ func DeleteAuthToken(token string, database database.Database) error {
 func CheckUserAuthFromContext(ctx context.Context, database database.Database) error {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
-		return utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+		return utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
 	token := auth.GetTokenFromGinContext(ginContext)
 	if token == nil {
-		return utils.ResponseError(ginContext, http.StatusUnauthorized, "No auth token")
+		return utils.ResponseError(ginContext, http.StatusUnauthorized, fmt.Errorf("no auth token: %w", err))
 	}
 
 	var p []byte
 	scanRow := database.QueryRow("select * from Auth_data where token = $1", token)
 	err = scanRow.Scan(&p, &p, &p, &p, &p)
 	if err != nil {
-		return utils.ResponseError(ginContext, http.StatusUnauthorized, "Invalid auth token")
+		return utils.ResponseError(ginContext, http.StatusUnauthorized, fmt.Errorf("invalid auth token: %w", err))
 	}
 
 	err = auth.CheckTokenValidity(*token)
@@ -51,10 +51,10 @@ func CheckUserAuthFromContext(ctx context.Context, database database.Database) e
 		err = DeleteAuthToken(*token, database)
 
 		if err != nil {
-			return utils.ResponseError(ginContext, http.StatusUnauthorized, "Invalid auth token, tried to delete auth token, can't delete")
+			return utils.ResponseError(ginContext, http.StatusUnauthorized, fmt.Errorf("invalid auth token: %w", err))
 		}
 
-		return utils.ResponseError(ginContext, http.StatusUnauthorized, "Invalid auth token")
+		return utils.ResponseError(ginContext, http.StatusUnauthorized, fmt.Errorf("invalid auth token: %w", err))
 	}
 
 	return nil
@@ -94,12 +94,12 @@ func GetUsersFromDatabase(users *[]*model.User, rows *sql.Rows) error {
 func GetUserIdFromContext(ctx context.Context, database database.Database) (*string, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
 	token := auth.GetTokenFromGinContext(ginContext)
 	if token == nil {
-		return nil, utils.ResponseError(ginContext, http.StatusUnauthorized, "No auth token")
+		return nil, utils.ResponseError(ginContext, http.StatusUnauthorized, fmt.Errorf("no auth token: %w", err))
 	}
 
 	userId, err := auth.GetUserIdByToken(*token)
@@ -107,10 +107,10 @@ func GetUserIdFromContext(ctx context.Context, database database.Database) (*str
 		err = DeleteAuthToken(*token, database)
 
 		if err != nil {
-			return nil, utils.ResponseError(ginContext, http.StatusUnauthorized, "Invalid auth token, tried to delete auth token, can't delete")
+			return nil, utils.ResponseError(ginContext, http.StatusUnauthorized, fmt.Errorf("invalid auth token, tried to delete auth token, can't delete: %w", err))
 		}
 
-		return nil, utils.ResponseError(ginContext, http.StatusUnauthorized, "Can't get user id from token")
+		return nil, utils.ResponseError(ginContext, http.StatusUnauthorized, fmt.Errorf("can't get user id from token: %w", err))
 	}
 
 	return userId, nil
@@ -119,19 +119,19 @@ func GetUserIdFromContext(ctx context.Context, database database.Database) (*str
 func GetUserFriends(ctx context.Context, userId string, database database.Database) ([]*model.User, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
 	rows, err := database.Query("select u.*  from User_friend_link f1 join User_friend_link f2 on f1.requester_id = f2.requested_id and f1.requested_id = f2.requester_id join User u on f1.requested_id = u.id where f1.requester_id = $1 and f1.requested_id != $1", userId)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Sprintf("Can't get user %s friends", userId))
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user %s friends: %w", userId, err))
 	}
 
 	friends := make([]*model.User, 0)
 
 	err = GetUsersFromDatabase(&friends, rows)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Sprintf("Can't get user %s friends", userId))
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user %s friends: %w", userId, err))
 	}
 
 	return friends, nil
@@ -140,19 +140,19 @@ func GetUserFriends(ctx context.Context, userId string, database database.Databa
 func GetUserFriendRequests(ctx context.Context, userId string, database database.Database) ([]*model.User, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
 	rows, err := database.Query("select u.* from User_friend_link f1 left join User_friend_link f2 on f1.requester_id = f2.requested_id and f1.requested_id = f2.requester_id join User u on f1.requested_id = u.id where f1.requester_id = $1 and f2.requester_id is null", userId)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Sprintf("Can't get user %s friends", userId))
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user %s friends: %w", userId, err))
 	}
 
 	friends := make([]*model.User, 0)
 
 	err = GetUsersFromDatabase(&friends, rows)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Sprintf("Can't get user %s friends", userId))
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user %s friends: %w", userId, err))
 	}
 
 	return friends, nil
@@ -161,19 +161,19 @@ func GetUserFriendRequests(ctx context.Context, userId string, database database
 func GetUserFriendInvites(ctx context.Context, userId string, database database.Database) ([]*model.User, error) {
 	ginContext, err := utils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, "Can't get gin context")
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
 	rows, err := database.Query("select u.* from User_friend_link f1 left join User_friend_link f2 on f1.requester_id = f2.requested_id and f1.requested_id = f2.requester_id join User u on f1.requester_id = u.id where f1.requested_id = $1 and f2.requester_id is null", userId)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Sprintf("Can't get user %s friends", userId))
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("Can't get user %s friends: %w", userId, err))
 	}
 
 	friends := make([]*model.User, 0)
 
 	err = GetUsersFromDatabase(&friends, rows)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Sprintf("Can't get user %s friends", userId))
+		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("Can't get user %s friends: %w", userId, err))
 	}
 
 	return friends, nil

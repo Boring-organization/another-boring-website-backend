@@ -10,7 +10,7 @@ type Gallery {
 }
 
 input NewGallery {
-    name: String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString(state: true)
+    name: String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString
     isClosed: Boolean!
     imageIds: [String!]! @maxArrayLength(value: 1000)
 }
@@ -20,15 +20,15 @@ input ImageIds {
 }
 
 extend type Mutation {
-    createGallery(newGallery: NewGallery!): Gallery! @authenticated(state: true)
-    addImagesFromGallery(imageIds: ImageIds!): Gallery! @authenticated(state: true)
-    deleteImagesFromGallery(imageIds: ImageIds!): Gallery! @authenticated(state: true)
-    updateGallery(galleryIdHolder: IdHolder!, newGallery: NewGallery!): Gallery! @authenticated(state: true)
-    deleteGallery(galleryIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+    createGallery(newGallery: NewGallery!): Gallery! @authenticated
+    addImagesFromGallery(imageIds: ImageIds!): Gallery! @authenticated
+    deleteImagesFromGallery(imageIds: ImageIds!): Gallery! @authenticated
+    updateGallery(galleryIdHolder: IdHolder!, newGallery: NewGallery!): Gallery! @authenticated
+    deleteGallery(galleryIdHolder: IdHolder!): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getGallery(galleryIdHolder: IdHolder!): Gallery! @authenticated(state: true)
-    getMyGalleries(paginationSettings: ListPaginationSettings!): [Gallery!]! @authenticated(state: true)
-    getUserGalleries(paginationSettings: ListPaginationSettings!): [Gallery!]! @authenticated(state: true)
+    getGallery(galleryIdHolder: IdHolder!): Gallery! @authenticated
+    getMyGalleries(paginationSettings: ListPaginationSettings!): [Gallery!]! @authenticated
+    getUserGalleries(paginationSettings: ListPaginationSettings!): [Gallery!]! @authenticated
 }

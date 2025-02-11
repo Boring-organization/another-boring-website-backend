@@ -22,44 +22,44 @@ extend type User {
 }
 
 input CreateUser {
-    nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString(state: true)
-    login:    String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString(state: true)
-    password: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
-    email:    String! @maxLength(value: 100) @notEmptyString(state: true) @email(state: true)
-    deviceName: String! @maxLength(value: 1000) @notEmptyString(state: true)
+    nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString
+    login:    String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString
+    password: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString
+    email:    String! @maxLength(value: 100) @notEmptyString @email
+    deviceName: String! @maxLength(value: 1000) @notEmptyString
 }
 
 input UpdateUser {
     id:      String!
-    nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString(state: true)
-    login:    String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString(state: true)
-    email:    String! @maxLength(value: 100) @notEmptyString(state: true) @email(state: true)
+    nickname: String! @minLength(value: 2) @maxLength(value: 30) @notEmptyString
+    login:    String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString
+    email:    String! @maxLength(value: 100) @notEmptyString @email
 }
 
 input NewPassword {
-    oldPassword: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
-    newPassword: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString(state: true)
+    oldPassword: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString
+    newPassword: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString
 }
 
 input NewEmail {
-    oldEmail: String! @maxLength(value: 100) @notEmptyString(state: true) @email(state: true)
-    newEmail: String! @maxLength(value: 100) @notEmptyString(state: true) @email(state: true)
+    oldEmail: String! @maxLength(value: 100) @notEmptyString @email
+    newEmail: String! @maxLength(value: 100) @notEmptyString @email
 }
 
 extend type Mutation {
-    createUser(newUser: CreateUser!): User!
-    updateUser(newUserData: UpdateUser!): User!  @authenticated(state: true)
-    deleteUser(userIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
-    friendInviteUser(userIdHolder: IdHolder!): Boolean! @authenticated(state: true)
-    changePassword(passwordData: NewPassword!): Token! @authenticated(state: true)
-    changeEmail(emailData: NewEmail!): Token! @authenticated(state: true)
+    createUser(newUserData: CreateUser!): User!
+    updateUser(newUserData: UpdateUser!): User!  @authenticated
+    deleteUser(userIdHolder: IdHolder!): DeleteResult! @authenticated
+    friendInviteUser(userIdHolder: IdHolder!): Boolean! @authenticated
+    changePassword(passwordData: NewPassword!): Token! @authenticated
+    changeEmail(emailData: NewEmail!): Token! @authenticated
 }
 
 extend type Query {
-    me: User! @authenticated(state: true)
-    user(userIdHolder: IdHolder!): User! @authenticated(state: true)
-    myFriends: [User!]! @authenticated(state: true)
-    myFriendRequests: [User!]! @authenticated(state: true)
-    myFriendInvites: [User!]! @authenticated(state: true)
-    userFriends(userIdHolder: IdHolder!): [User!]! @authenticated(state: true)
+    me: User! @authenticated
+    user(userIdHolder: IdHolder!): User! @authenticated
+    myFriends: [User!]! @authenticated
+    myFriendRequests: [User!]! @authenticated
+    myFriendInvites: [User!]! @authenticated
+    userFriends(userIdHolder: IdHolder!): [User!]! @authenticated
 }

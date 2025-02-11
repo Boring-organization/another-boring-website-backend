@@ -27,14 +27,14 @@ input UpdateGameFindPost {
 }
 
 extend type Mutation {
-    createGameFindPost(newGameFindPost: NewGameFindPost!): GameFindPost! @authenticated(state: true)
-    updateGameFindPost(newGameFindPostData: UpdateGameFindPost!): GameFindPost! @authenticated(state: true)
-    deleteGameFindPost(gameFindPostIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+    createGameFindPost(newGameFindPost: NewGameFindPost!): GameFindPost! @authenticated
+    updateGameFindPost(newGameFindPostData: UpdateGameFindPost!): GameFindPost! @authenticated
+    deleteGameFindPost(gameFindPostIdHolder: IdHolder!): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getGameFindPost(gameFindPostIdHolder: IdHolder!): GameFindPost! @authenticated(state: true)
-    getMyGameFindPosts(paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated(state: true)
-    getUserGameFindPosts(userIdHolder: IdHolder!, paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated(state: true)
-    getRecommendedGameFindPosts(paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated(state: true)
+    getGameFindPost(gameFindPostIdHolder: IdHolder!): GameFindPost! @authenticated
+    getMyGameFindPosts(paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated
+    getUserGameFindPosts(userIdHolder: IdHolder!, paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated
+    getRecommendedGameFindPosts(paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated
 }

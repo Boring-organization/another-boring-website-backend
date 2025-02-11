@@ -11,16 +11,16 @@ type PostCommentComplaint implements Complaint{
 
 input NewPostCommentComplaint {
     text: String! @maxLength(value: 10000)
-    violationTypeCode: String! @maxLength(value: 100) @notEmptyString(state: true)
+    violationTypeCode: String! @maxLength(value: 100) @notEmptyString
 }
 
 extend type Mutation {
-    createPostCommentComplaint(postCommentIdHolder: IdHolder!, newComplaint: NewPostCommentComplaint!): PostCommentComplaint! @authenticated(state: true)
-    deletePostCommentComplaint(complaintIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
+    createPostCommentComplaint(postCommentIdHolder: IdHolder!, newComplaint: NewPostCommentComplaint!): PostCommentComplaint! @authenticated
+    deletePostCommentComplaint(complaintIdHolder: IdHolder!): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getMyActivePostCommentComplaints: [PostCommentComplaint!]! @authenticated(state: true)
-    getMyClosedPostCommentComplaints: [PostCommentComplaint!]! @authenticated(state: true)
-    getMyRefusedPostCommentComplaints: [PostCommentComplaint!]! @authenticated(state: true)
+    getMyActivePostCommentComplaints: [PostCommentComplaint!]! @authenticated
+    getMyClosedPostCommentComplaints: [PostCommentComplaint!]! @authenticated
+    getMyRefusedPostCommentComplaints: [PostCommentComplaint!]! @authenticated
 }
