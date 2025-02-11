@@ -35,4 +35,6 @@ extend type Mutation {
 extend type Query {
     getGameFindPost(gameFindPostIdHolder: IdHolder!): GameFindPost! @authenticated(state: true)
     getMyGameFindPosts(paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated(state: true)
+    getUserGameFindPosts(userIdHolder: IdHolder!, paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated(state: true)
+    getRecommendedGameFindPosts(paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated(state: true)
 }

@@ -13,7 +13,6 @@ type Catalog {
     isActive: Boolean!
 }
 
-
 enum Catalogs  {
     violationType
     kink

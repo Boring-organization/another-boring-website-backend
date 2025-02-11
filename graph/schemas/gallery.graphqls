@@ -9,13 +9,26 @@ type Gallery {
     images: [Image!]!
 }
 
-input  NewGallery {
-    name: String!
+input NewGallery {
+    name: String! @minLength(value: 2) @maxLength(value: 100) @notEmptyString(state: true)
     isClosed: Boolean!
+    imageIds: [String!]! @maxArrayLength(value: 1000)
+}
+
+input ImageIds {
+    imageIds: [String!]! @maxArrayLength(value: 1000)
+}
+
+extend type Mutation {
+    createGallery(newGallery: NewGallery!): Gallery! @authenticated(state: true)
+    addImagesFromGallery(imageIds: ImageIds!): Gallery! @authenticated(state: true)
+    deleteImagesFromGallery(imageIds: ImageIds!): Gallery! @authenticated(state: true)
+    updateGallery(galleryIdHolder: IdHolder!, newGallery: NewGallery!): Gallery! @authenticated(state: true)
+    deleteGallery(galleryIdHolder: IdHolder!): DeleteResult! @authenticated(state: true)
 }
 
 extend type Query {
-    getCatalog(catalog: Catalogs): Catalog @authenticated(state: true)
-    getCatalogItems(catalog: Catalogs): [CatalogItem!]! @authenticated(state: true)
-    getCatalogItem(catalogItemCode: String!): CatalogItem! @authenticated(state: true)
+    getGallery(galleryIdHolder: IdHolder!): Gallery! @authenticated(state: true)
+    getMyGalleries(paginationSettings: ListPaginationSettings!): [Gallery!]! @authenticated(state: true)
+    getUserGalleries(paginationSettings: ListPaginationSettings!): [Gallery!]! @authenticated(state: true)
 }
