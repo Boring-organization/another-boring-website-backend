@@ -2,6 +2,7 @@ package auth
 
 import (
 	"TestGoLandProject/global_consts"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"strings"
@@ -34,7 +35,7 @@ func CheckTokenValidity(token string) error {
 	})
 
 	if err != nil || !tkn.Valid {
-		return err
+		return fmt.Errorf("can't parse token: %w", err)
 	}
 
 	return nil
@@ -48,7 +49,11 @@ func GetUserIdByToken(token string) (*string, error) {
 		return jwtKey, nil
 	})
 
-	return &claims.UserId, err
+	if err != nil {
+		return nil, fmt.Errorf("can't parse token: %w", err)
+	}
+
+	return &claims.UserId, nil
 
 }
 
