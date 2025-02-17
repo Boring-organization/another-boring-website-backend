@@ -6,6 +6,8 @@ type Message {
     editedAt: Int64
     deletedAt: Int64
     linkedGameFindPost: GameFindPost
+    images: [Image!]!
+    linkedMessages: [Message!]!
 }
 
 input NewMessage {
@@ -16,10 +18,10 @@ input NewMessage {
 }
 
 extend type Mutation {
-    createMessage(newMessage: NewMessage): Message! @authenticated
-    deleteMessage(messageIdHolder: IdHolder): DeleteResult! @authenticated
+    createMessage(newMessage: NewMessage!): Message! @authenticated
+    deleteMessage(messageIdHolder: IdHolder! @idExistInTable(table: Message)): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getMessages(paginationSettings: ListPaginationSettings!, dialogIdHolder: IdHolder): [Dialog!]! @authenticated
+    getMessages(paginationSettings: ListPaginationSettings!, dialogIdHolder: IdHolder! @idExistInTable(table: Dialog_user)): [Dialog!]! @authenticated
 }

@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"TestGoLandProject/core/database"
+	sq "github.com/Masterminds/squirrel"
 )
 
 // This file will not be regenerated automatically.
@@ -9,5 +9,5 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	*database.Database
+	db sq.StatementBuilderType
 }

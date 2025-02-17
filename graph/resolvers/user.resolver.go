@@ -6,22 +6,23 @@ package resolver
 
 import (
 	"TestGoLandProject/core/auth"
-	"TestGoLandProject/core/utils"
+	commonUtils "TestGoLandProject/core/utils/common"
+	databaseUtils "TestGoLandProject/core/utils/database_utils"
+	resolverUtils "TestGoLandProject/core/utils/resolver"
 	"TestGoLandProject/graph/model"
-	resolverUtils "TestGoLandProject/graph/resolvers/utils"
 	"context"
 	"fmt"
+	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 	"net/http"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, newUserData model.CreateUser) (*model.User, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
 	id := uuid.New()
@@ -34,6 +35,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, newUserData model.Cre
 		Password:     &newUserData.Password,
 		LastActionAt: timeNow,
 		CreatedAt:    timeNow,
+		Sex:          newUserData.Sex,
 		IsAdmin:      false,
 		Token:        nil,
 	}
@@ -41,17 +43,16 @@ func (r *mutationResolver) CreateUser(ctx context.Context, newUserData model.Cre
 	tokenLiveTime := time.Hour * 24 * 30
 	jwtToken, err := auth.GenerateJwt(id.String(), tokenLiveTime)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't generate token: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't generate token: %w", err))
 	}
 
-	_, err = r.Database.ExecuteOperation("insert into User (id, nickname, login, password, email, created_at, last_action_at) values ($1, $2, $3, $4, $5, $6, $7)", user.ID, newUserData.Nickname, newUserData.Login, newUserData.Password, newUserData.Email, timeNow, timeNow)
+	_, err = r.db.Insert("User").Columns("id", "nickname", "login", "password", "email", "sex", "created_at", "last_action_at").Values(user.ID, newUserData.Nickname, newUserData.Login, newUserData.Password, newUserData.Email, newUserData.Sex, timeNow, timeNow).Exec()
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't add new user to database: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't add new user to database: %w", err))
 	}
-
-	_, err = r.Database.ExecuteOperation("insert into Auth_data (token, user_id, device_name, used_at, expired_at) values ($1, $2, $3, $4, $5)", jwtToken, id.String(), newUserData.DeviceName, timeNow, time.Now().Add(tokenLiveTime).UnixMilli())
+	_, err = r.db.Insert("Auth_data").Columns("token", "user_id", "device_name", "device_id", "used_at", "expired_at").Values(jwtToken, id.String(), newUserData.DeviceName, newUserData.DeviceID, timeNow, time.Now().Add(tokenLiveTime).UnixMilli()).Exec()
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't add auth data to database: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't add auth data to database: %w", err))
 	}
 
 	user.Token = &jwtToken
@@ -61,50 +62,37 @@ func (r *mutationResolver) CreateUser(ctx context.Context, newUserData model.Cre
 
 // UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, newUserData model.UpdateUser) (*model.User, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
-	}
-
-	user := model.User{}
-
-	userRow := r.Database.QueryRow("select * from User where id = $1", newUserData.ID)
-	err = userRow.Scan(&user.ID, &user.Nickname, &user.Login, &user.Password, &user.CreatedAt, &user.IsAdmin, &user.DeletedAt)
-
-	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusNotFound, fmt.Errorf("user not found: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
 	timeNow := int(time.Now().UnixMilli())
-	user = model.User{ID: newUserData.ID, Nickname: newUserData.Nickname, Login: newUserData.Login, LastActionAt: timeNow, EditedAt: &timeNow}
-	_, err = r.Database.ExecuteOperation("update User set nickname = $1, login = $2, password = $3, edited_at = $4, last_action_at = $5 where id = $6;", user.Nickname, user.Login, user.Password, user.EditedAt, user.LastActionAt, user.ID)
+
+	_, err = r.db.Update("User").Where(sq.Eq{"id": newUserData.ID}).Set("nickname", newUserData.Nickname).Set("edited_at", timeNow).Set("last_action_at", timeNow).Exec()
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user data in database: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user data in database: %w", err))
 	}
 
-	return &user, nil
+	user, err := databaseUtils.GetUserFromDatabase(r.db, newUserData.ID)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusNotFound, fmt.Errorf("user not found: %w", err))
+	}
+
+	return user, nil
 }
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, userIDHolder model.IDHolder) (*model.DeleteResult, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return &model.DeleteResult{IsDeleted: false}, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
-	}
-
-	user := model.User{}
-
-	userRow := r.Database.QueryRow("select * from User where id = $1", userIDHolder.ID)
-	err = userRow.Scan(&user.ID, &user.Nickname, &user.Login, &user.Password)
-
-	if err != nil {
-		return &model.DeleteResult{IsDeleted: false}, utils.ResponseError(ginContext, http.StatusNotFound, fmt.Errorf("user not found: %w", err))
+		return &model.DeleteResult{IsDeleted: false}, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
 	timeNow := int(time.Now().UnixMilli())
-	_, err = r.Database.ExecuteOperation("update User set deleted_at = $1, last_action_at = $2 where id = $3", timeNow, timeNow, userIDHolder.ID)
+	_, err = r.db.Update("User").Where(sq.Eq{"id": userIDHolder.ID}).Set("deleted_at", timeNow).Set("last_action_at", timeNow).Exec()
 	if err != nil {
-		return &model.DeleteResult{IsDeleted: false}, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't delete user: %w", err))
+		return &model.DeleteResult{IsDeleted: false}, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't delete user: %w", err))
 	}
 
 	return &model.DeleteResult{IsDeleted: true}, nil
@@ -112,19 +100,19 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, userIDHolder model.ID
 
 // FriendInviteUser is the resolver for the friendInviteUser field.
 func (r *mutationResolver) FriendInviteUser(ctx context.Context, userIDHolder model.IDHolder) (bool, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return false, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+		return false, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
-	userId, err := resolverUtils.GetUserIdFromContext(ctx, *r.Database)
+	userId, err := resolverUtils.GetUserIdFromContext(ginContext, r.db)
 	if err != nil {
-		return false, err
+		return false, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user id from request header: %w", err))
 	}
 
-	_, err = r.Database.ExecuteOperation("insert into User_friend_link (requester_id, requested_id) values ($1, $2)", *userId, userIDHolder.ID)
+	_, err = r.db.Insert("User_friend_link").Columns("requester_id", "requested_id").Values(*userId, userIDHolder.ID).Exec()
 	if err != nil {
-		return false, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't add friend invite: %w", err))
+		return false, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't add friend invite: %w", err))
 	}
 
 	return true, nil
@@ -142,92 +130,110 @@ func (r *mutationResolver) ChangeEmail(ctx context.Context, emailData model.NewE
 
 // Me is the resolver for the me field.
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
-	userId, err := resolverUtils.GetUserIdFromContext(ctx, *r.Database)
+	userId, err := resolverUtils.GetUserIdFromContext(ginContext, r.db)
 	if err != nil {
-		return nil, err
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user id from request header: %w", err))
 	}
 
-	user := model.User{}
-	err = resolverUtils.GetUserFromDatabase(*r.Database, &user, *userId)
+	user, err := databaseUtils.GetUserFromDatabase(r.db, *userId)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user info from database: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user info from database: %w", err))
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, userIDHolder model.IDHolder) (*model.User, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
-	user := model.User{}
-	err = resolverUtils.GetUserFromDatabase(*r.Database, &user, userIDHolder.ID)
+	user, err := databaseUtils.GetUserFromDatabase(r.db, userIDHolder.ID)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user info from database or user not found: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user info from database or user not found: %w", err))
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 // MyFriends is the resolver for the myFriends field.
-func (r *queryResolver) MyFriends(ctx context.Context) ([]*model.User, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+func (r *queryResolver) MyFriends(ctx context.Context, paginationSettings model.ListByTimeSortPaginationSettings) ([]*model.User, error) {
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
-	userId, err := resolverUtils.GetUserIdFromContext(ctx, *r.Database)
+	userId, err := resolverUtils.GetUserIdFromContext(ginContext, r.db)
 	if err != nil {
-		return nil, err
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user id from request header: %w", err))
 	}
 
-	return resolverUtils.GetUserFriends(ctx, *userId, *r.Database)
+	userFriends, err := resolverUtils.GetUserFriends(r.db, *userId, paginationSettings)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user %s friends: %w", *userId, err))
+	}
+
+	return *userFriends, nil
 }
 
 // MyFriendRequests is the resolver for the myFriendRequests field.
-func (r *queryResolver) MyFriendRequests(ctx context.Context) ([]*model.User, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+func (r *queryResolver) MyFriendRequests(ctx context.Context, paginationSettings model.ListByTimeSortPaginationSettings) ([]*model.User, error) {
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
-	userId, err := resolverUtils.GetUserIdFromContext(ctx, *r.Database)
+	userId, err := resolverUtils.GetUserIdFromContext(ginContext, r.db)
 	if err != nil {
-		return nil, err
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user id from request header: %w", err))
 	}
 
-	return resolverUtils.GetUserFriendRequests(ctx, *userId, *r.Database)
+	userFriendRequests, err := resolverUtils.GetUserFriendRequests(r.db, *userId, paginationSettings)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user %s friend requests: %w", *userId, err))
+	}
+
+	return *userFriendRequests, nil
 }
 
 // MyFriendInvites is the resolver for the myFriendInvites field.
-func (r *queryResolver) MyFriendInvites(ctx context.Context) ([]*model.User, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+func (r *queryResolver) MyFriendInvites(ctx context.Context, paginationSettings model.ListByTimeSortPaginationSettings) ([]*model.User, error) {
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
-	userId, err := resolverUtils.GetUserIdFromContext(ctx, *r.Database)
+	userId, err := resolverUtils.GetUserIdFromContext(ginContext, r.db)
 	if err != nil {
-		return nil, err
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user id from request header: %w", err))
 	}
 
-	return resolverUtils.GetUserFriendInvites(ctx, *userId, *r.Database)
+	userFriendInvites, err := resolverUtils.GetUserFriendInvites(r.db, *userId, paginationSettings)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user %s friend invites: %w", *userId, err))
+	}
+
+	return *userFriendInvites, nil
 }
 
 // UserFriends is the resolver for the userFriends field.
-func (r *queryResolver) UserFriends(ctx context.Context, userIDHolder model.IDHolder) ([]*model.User, error) {
-	ginContext, err := utils.GinContextFromContext(ctx)
+func (r *queryResolver) UserFriends(ctx context.Context, userIDHolder model.IDHolder, paginationSettings model.ListByTimeSortPaginationSettings) ([]*model.User, error) {
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
 	if err != nil {
-		return nil, utils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
 	}
 
-	return resolverUtils.GetUserFriends(ctx, userIDHolder.ID, *r.Database)
+	userFriends, err := resolverUtils.GetUserFriends(r.db, userIDHolder.ID, paginationSettings)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user %s friends: %w", userIDHolder.ID, err))
+	}
+
+	return *userFriends, nil
 }

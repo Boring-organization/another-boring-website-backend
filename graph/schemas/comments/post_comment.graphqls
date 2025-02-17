@@ -1,10 +1,12 @@
 type PostComment {
     id: String!
-    author: User!
-    post: Post!
     text: String!
+    postId: String!
+    author: User!
+    linkedUser: User!
     likeCount: Int64!
     createdAt: Int64!
+    editedAt: Int64
     deletedAt: Int64
 }
 
@@ -14,6 +16,6 @@ input NewPostComment {
 }
 
 extend type Mutation {
-    createPostComment(postIdHolder: IdHolder!, comment: NewPostComment!): PostComment! @authenticated
-    deletePostComment(commentIdHolder: IdHolder!): DeleteResult! @authenticated
+    createPostComment(postIdHolder: IdHolder! @idExistInTable(table: Post), comment: NewPostComment!): PostComment! @authenticated
+    deletePostComment(commentIdHolder: IdHolder! @idExistInTable(table: Post_comment)): DeleteResult! @authenticated
 }

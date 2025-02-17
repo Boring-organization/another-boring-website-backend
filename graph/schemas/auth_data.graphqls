@@ -1,0 +1,10 @@
+type AuthData {
+    deviceId:  String!
+    deviceName:  String!
+    usedAt:  Int64!
+    expiredAt:  Int64!
+}
+
+extend type Query {
+    getMyAuthData: [AuthData!]! @authenticated
+}

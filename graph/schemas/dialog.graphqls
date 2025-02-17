@@ -10,8 +10,8 @@ input ToggleNotificationData {
 }
 
 extend type Mutation {
-    deleteDialog(dialogIdHolder: IdHolder): DeleteResult! @authenticated
-    toggleDialogNotification(stateHolder: ToggleNotificationData): Boolean! @authenticated
+    deleteDialog(dialogIdHolder: IdHolder! @idExistInTable(table: Dialog)): DeleteResult! @authenticated
+    toggleDialogNotification(stateHolder: ToggleNotificationData!): Boolean! @authenticated
 }
 
 extend type Query {

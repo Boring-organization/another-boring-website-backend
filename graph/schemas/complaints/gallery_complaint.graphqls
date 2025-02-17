@@ -1,0 +1,26 @@
+type GalleryComplaint implements Complaint{
+    id: String!
+    author: User!
+    gallery: Post!
+    text: String!
+    createdAt: Int64!
+    deletedAt: Int64
+    violationTypeCode: String!
+    complaintStatus: ComplaintStatus!
+}
+
+input NewGalleryComplaint {
+    text: String! @maxLength(value: 10000)
+    violationTypeCode: String! @maxLength(value: 100) @notEmptyString
+}
+
+extend type Mutation {
+    createGalleryComplaint(galleryIdHolder: IdHolder! @idExistInTable(table: Gallery), newComplaint: NewGalleryComplaint!): GalleryComplaint! @authenticated
+    deleteGalleryComplaint(complaintIdHolder: IdHolder! @idExistInTable(table: Gallery_complaint)): DeleteResult! @authenticated
+}
+
+extend type Query {
+    getMyActiveGalleryComplaints: [GalleryComplaint!]! @authenticated
+    getMyClosedGalleryComplaints: [GalleryComplaint!]! @authenticated
+    getMyRefusedGalleryComplaints: [GalleryComplaint!]! @authenticated
+}

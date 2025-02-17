@@ -15,3 +15,30 @@ type Mutation {
 type Query {
     query: String
 }
+
+enum Tables  {
+    User
+    User_complaint
+    User_avatar_image
+    Post
+    Post_image
+    Post_complaint
+    Post_comment
+    Post_comment_image
+    Post_comment_complaint
+    Game_find_post
+    Game_find_post_image
+    Game_find_post_complaint
+    Game_find_post_comment
+    Game_find_post_comment_image
+    Game_find_post_comment_complaint
+    Gallery
+    Gallery_image
+    Gallery_complaint
+    Message
+    Message_image
+    Dialog
+    Dialog_user
+    Catalog
+    Catalog_item
+}

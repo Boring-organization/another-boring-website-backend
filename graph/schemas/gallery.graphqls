@@ -23,12 +23,12 @@ extend type Mutation {
     createGallery(newGallery: NewGallery!): Gallery! @authenticated
     addImagesFromGallery(imageIds: ImageIds!): Gallery! @authenticated
     deleteImagesFromGallery(imageIds: ImageIds!): Gallery! @authenticated
-    updateGallery(galleryIdHolder: IdHolder!, newGallery: NewGallery!): Gallery! @authenticated
-    deleteGallery(galleryIdHolder: IdHolder!): DeleteResult! @authenticated
+    updateGallery(galleryIdHolder: IdHolder! @idExistInTable(table: Gallery), newGallery: NewGallery!): Gallery! @authenticated
+    deleteGallery(galleryIdHolder: IdHolder! @idExistInTable(table: Gallery)): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getGallery(galleryIdHolder: IdHolder!): Gallery! @authenticated
+    getGallery(galleryIdHolder: IdHolder! @idExistInTable(table: Gallery)): Gallery! @authenticated
     getMyGalleries(paginationSettings: ListPaginationSettings!): [Gallery!]! @authenticated
     getUserGalleries(paginationSettings: ListPaginationSettings!): [Gallery!]! @authenticated
 }

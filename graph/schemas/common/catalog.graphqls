@@ -16,6 +16,7 @@ type Catalog {
 enum Catalogs  {
     violationType
     kink
+    sex
 }
 
 extend type Query {

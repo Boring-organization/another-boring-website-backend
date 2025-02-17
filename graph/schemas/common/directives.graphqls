@@ -31,3 +31,7 @@ directive @authenticated on FIELD_DEFINITION
 directive @catalogItemCode(
     catalog: Catalogs
 ) on INPUT_FIELD_DEFINITION
+
+directive @idExistInTable(
+    table: Tables
+) on ARGUMENT_DEFINITION

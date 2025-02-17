@@ -11,12 +11,12 @@ import (
 )
 
 // DeleteDialog is the resolver for the deleteDialog field.
-func (r *mutationResolver) DeleteDialog(ctx context.Context, dialogIDHolder *model.IDHolder) (*model.DeleteResult, error) {
+func (r *mutationResolver) DeleteDialog(ctx context.Context, dialogIDHolder model.IDHolder) (*model.DeleteResult, error) {
 	panic(fmt.Errorf("not implemented: DeleteDialog - deleteDialog"))
 }
 
 // ToggleDialogNotification is the resolver for the toggleDialogNotification field.
-func (r *mutationResolver) ToggleDialogNotification(ctx context.Context, stateHolder *model.ToggleNotificationData) (bool, error) {
+func (r *mutationResolver) ToggleDialogNotification(ctx context.Context, stateHolder model.ToggleNotificationData) (bool, error) {
 	panic(fmt.Errorf("not implemented: ToggleDialogNotification - toggleDialogNotification"))
 }
 

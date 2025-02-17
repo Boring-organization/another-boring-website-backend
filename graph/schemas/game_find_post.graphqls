@@ -10,6 +10,7 @@ type GameFindPost {
     comments: [GameFindPostComment!]!
     isAnonymously: Boolean!
     isLikable: Boolean!
+    kinks: [String!]!
 }
 
 input NewGameFindPost {
@@ -17,6 +18,7 @@ input NewGameFindPost {
     imageIds: [String!]! @maxArrayLength(value: 10)
     isAnonymously: Boolean!
     isLikable: Boolean!
+    kinks: [String!]!
 }
 
 input UpdateGameFindPost {
@@ -24,17 +26,18 @@ input UpdateGameFindPost {
     imageIds: [String!]! @maxArrayLength(value: 10)
     isAnonymously: Boolean!
     isLikable: Boolean!
+    kinks: [String!]!
 }
 
 extend type Mutation {
     createGameFindPost(newGameFindPost: NewGameFindPost!): GameFindPost! @authenticated
     updateGameFindPost(newGameFindPostData: UpdateGameFindPost!): GameFindPost! @authenticated
-    deleteGameFindPost(gameFindPostIdHolder: IdHolder!): DeleteResult! @authenticated
+    deleteGameFindPost(gameFindPostIdHolder: IdHolder! @idExistInTable(table: Game_find_post)): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getGameFindPost(gameFindPostIdHolder: IdHolder!): GameFindPost! @authenticated
+    getGameFindPost(gameFindPostIdHolder: IdHolder! @idExistInTable(table: Game_find_post)): GameFindPost! @authenticated
     getMyGameFindPosts(paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated
-    getUserGameFindPosts(userIdHolder: IdHolder!, paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated
+    getUserGameFindPosts(userIdHolder: IdHolder! @idExistInTable(table: User), paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated
     getRecommendedGameFindPosts(paginationSettings: ListPaginationSettings!): [GameFindPost!]! @authenticated
 }

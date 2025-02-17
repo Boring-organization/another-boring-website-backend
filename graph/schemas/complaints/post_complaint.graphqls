@@ -15,8 +15,8 @@ input NewPostComplaint {
 }
 
 extend type Mutation {
-    createPostComplaint(postIdHolder: IdHolder!, newComplaint: NewPostComplaint!): PostComplaint! @authenticated
-    deletePostComplaint(complaintIdHolder: IdHolder!): DeleteResult! @authenticated
+    createPostComplaint(postIdHolder: IdHolder! @idExistInTable(table: Post), newComplaint: NewPostComplaint!): PostComplaint! @authenticated
+    deletePostComplaint(complaintIdHolder: IdHolder! @idExistInTable(table: Post_complaint)): DeleteResult! @authenticated
 }
 
 extend type Query {

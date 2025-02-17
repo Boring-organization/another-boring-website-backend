@@ -15,8 +15,8 @@ input NewGameFindPostCommentComplaint {
 }
 
 extend type Mutation {
-    createGameFindPostCommentComplaint(gameFindPostCommentIdHolder: IdHolder!, newComplaint: NewGameFindPostCommentComplaint!): GameFindPostCommentComplaint! @authenticated
-    deleteGameFindPostCommentComplaint(complaintIdHolder: IdHolder!): DeleteResult! @authenticated
+    createGameFindPostCommentComplaint(gameFindPostCommentIdHolder: IdHolder! @idExistInTable(table: Game_find_post_comment), newComplaint: NewGameFindPostCommentComplaint!): GameFindPostCommentComplaint! @authenticated
+    deleteGameFindPostCommentComplaint(complaintIdHolder: IdHolder! @idExistInTable(table: Game_find_post_comment_complaint)): DeleteResult! @authenticated
 }
 
 extend type Query {

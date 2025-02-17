@@ -16,14 +16,14 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func GetTokenFromGinContext(context *gin.Context) *string {
+func GetTokenFromGinContext(context *gin.Context) (*string, error) {
 	bearerToken := context.Request.Header.Get("Authorization")
 
 	if bearerToken != "" {
-		return &strings.Split(bearerToken, " ")[1]
+		return &strings.Split(bearerToken, " ")[1], nil
 	}
 
-	return nil
+	return nil, fmt.Errorf("can't find bearer token")
 
 }
 

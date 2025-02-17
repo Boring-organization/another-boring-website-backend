@@ -1,10 +1,12 @@
 type GameFindPostComment {
     id: String!
-    author: User!
-    gameFindPost: GameFindPost!
     text: String!
+    gameFindPostId: String!
+    author: User!
+    linkedUser: User!
     likeCount: Int64!
     createdAt: Int64!
+    editedAt: Int64
     deletedAt: Int64
 }
 
@@ -14,6 +16,6 @@ input NewGameFindPostComment {
 }
 
 extend type Mutation {
-    createGameFindPostComment(gameFindPostIdHolder: IdHolder!, comment: NewGameFindPostComment!): GameFindPostComment! @authenticated
-    deleteGameFindPostComment(commentId: IdHolder!): DeleteResult! @authenticated
+    createGameFindPostComment(gameFindPostIdHolder: IdHolder! @idExistInTable(table: Game_find_post), comment: NewGameFindPostComment!): GameFindPostComment! @authenticated
+    deleteGameFindPostComment(commentId: IdHolder! @idExistInTable(table: Game_find_post_comment)): DeleteResult! @authenticated
 }

@@ -4,9 +4,10 @@ import (
 	"TestGoLandProject/cli"
 	"TestGoLandProject/core/database"
 	"TestGoLandProject/core/router"
+	"TestGoLandProject/core/utils/common"
 	"TestGoLandProject/core/validation"
 	"TestGoLandProject/global_consts"
-	"TestGoLandProject/graph"
+	graph "TestGoLandProject/graph/generated"
 	"TestGoLandProject/graph/resolvers"
 	"context"
 	"fmt"
@@ -17,6 +18,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/gin-gonic/gin"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -35,7 +37,7 @@ func generateSchema() {
 	}
 }
 
-func graphqlHandler(resolver graph.ResolverRoot, databaseInstance database.Database) gin.HandlerFunc {
+func graphqlHandler(resolver graph.ResolverRoot, databaseInstance sq.StatementBuilderType) gin.HandlerFunc {
 	graphQlConfig := graph.Config{Resolvers: resolver}
 
 	err := validation.ImplementDirectives(&graphQlConfig.Directives, databaseInstance)
@@ -92,17 +94,22 @@ func main() {
 		panic(err)
 	}
 
-	databaseInstance := database.Database{DB: initializedDatabase}
+	defer initializedDatabase.Close()
+	sqDb := sq.StatementBuilder.RunWith(initializedDatabase)
 
-	resolverInstance := &resolver.Resolver{Database: &databaseInstance}
-	defer resolverInstance.CloseDb()
+	resolverInstance := &resolver.Resolver{sqDb}
 
 	ginRouter := gin.Default()
 	ginRouter.Use(GinContextToContextMiddleware())
 
-	ginRouter.POST(global_consts.QueryUrl, graphqlHandler(resolverInstance, databaseInstance))
+	ginRouter.POST(global_consts.QueryUrl, graphqlHandler(resolverInstance, sqDb))
 	ginRouter.GET("/", playgroundHandler())
 	router.InitHttpRoutes(ginRouter)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go commonUtils.PeriodicImageCleaner(ctx, sqDb)
+
+	defer cancel()
 
 	ginRouter.Run()
 }

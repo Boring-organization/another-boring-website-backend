@@ -11,7 +11,7 @@ import (
 )
 
 // CreateUserComplaint is the resolver for the createUserComplaint field.
-func (r *mutationResolver) CreateUserComplaint(ctx context.Context, postIDHolder model.IDHolder, newComplaint model.NewUserComplaint) (*model.UserComplaint, error) {
+func (r *mutationResolver) CreateUserComplaint(ctx context.Context, userIDHolder model.IDHolder, newComplaint model.NewUserComplaint) (*model.UserComplaint, error) {
 	panic(fmt.Errorf("not implemented: CreateUserComplaint - createUserComplaint"))
 }
 

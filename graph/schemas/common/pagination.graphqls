@@ -1,10 +1,11 @@
 input ListPaginationSettings {
-    count: Int64! @minLength(value: 1)
-    startWith: Int64! @minLength(value: 0)
+    count: Int64! @minValue(value: 1) @maxValue(value: 1000)
     lastItemId: String! @maxLength(value: 100) @notEmptyString
+    ascending: Boolean! = true
 }
 
-input PagePaginationSettings {
-    page: Int64! @minLength(value: 0)
-    size: Int64! @minLength(value: 1)
+input ListByTimeSortPaginationSettings {
+    count: Int64! @minValue(value: 1) @maxValue(value: 1000)
+    lastItemCreatedAt: Int64! @minValue(value: 0)
+    ascending: Boolean! = true
 }

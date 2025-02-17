@@ -8,13 +8,14 @@ type User {
     login:    String!
     password: String
     email:    String!
+    isAdmin: Boolean!
+    description: String
+    kinks: [String!]!
+    sex: String!
     lastActionAt: Int64!
     createdAt: Int64!
     editedAt: Int64
     deletedAt: Int64
-    isAdmin: Boolean!
-    description: String
-    kinks: [String!]!
 }
 
 extend type User {
@@ -27,6 +28,8 @@ input CreateUser {
     password: String! @minLength(value: 8) @maxLength(value: 100) @notEmptyString
     email:    String! @maxLength(value: 100) @notEmptyString @email
     deviceName: String! @maxLength(value: 1000) @notEmptyString
+    deviceId: String! @maxLength(value: 1000) @notEmptyString
+    sex: String! @catalogItemCode
 }
 
 input UpdateUser {
@@ -49,17 +52,17 @@ input NewEmail {
 extend type Mutation {
     createUser(newUserData: CreateUser!): User!
     updateUser(newUserData: UpdateUser!): User!  @authenticated
-    deleteUser(userIdHolder: IdHolder!): DeleteResult! @authenticated
-    friendInviteUser(userIdHolder: IdHolder!): Boolean! @authenticated
+    deleteUser(userIdHolder: IdHolder! @idExistInTable(table: User)): DeleteResult! @authenticated
+    friendInviteUser(userIdHolder: IdHolder! @idExistInTable(table: User)): Boolean! @authenticated
     changePassword(passwordData: NewPassword!): Token! @authenticated
     changeEmail(emailData: NewEmail!): Token! @authenticated
 }
 
 extend type Query {
     me: User! @authenticated
-    user(userIdHolder: IdHolder!): User! @authenticated
-    myFriends: [User!]! @authenticated
-    myFriendRequests: [User!]! @authenticated
-    myFriendInvites: [User!]! @authenticated
-    userFriends(userIdHolder: IdHolder!): [User!]! @authenticated
+    user(userIdHolder: IdHolder! @idExistInTable(table: User)): User! @authenticated
+    myFriends(paginationSettings: ListByTimeSortPaginationSettings!): [User!]! @authenticated
+    myFriendRequests(paginationSettings: ListByTimeSortPaginationSettings!): [User!]! @authenticated
+    myFriendInvites(paginationSettings: ListByTimeSortPaginationSettings!): [User!]! @authenticated
+    userFriends(userIdHolder: IdHolder! @idExistInTable(table: User), paginationSettings: ListByTimeSortPaginationSettings!): [User!]! @authenticated
 }

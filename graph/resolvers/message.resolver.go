@@ -11,16 +11,16 @@ import (
 )
 
 // CreateMessage is the resolver for the createMessage field.
-func (r *mutationResolver) CreateMessage(ctx context.Context, newMessage *model.NewMessage) (*model.Message, error) {
+func (r *mutationResolver) CreateMessage(ctx context.Context, newMessage model.NewMessage) (*model.Message, error) {
 	panic(fmt.Errorf("not implemented: CreateMessage - createMessage"))
 }
 
 // DeleteMessage is the resolver for the deleteMessage field.
-func (r *mutationResolver) DeleteMessage(ctx context.Context, messageIDHolder *model.IDHolder) (*model.DeleteResult, error) {
+func (r *mutationResolver) DeleteMessage(ctx context.Context, messageIDHolder model.IDHolder) (*model.DeleteResult, error) {
 	panic(fmt.Errorf("not implemented: DeleteMessage - deleteMessage"))
 }
 
 // GetMessages is the resolver for the getMessages field.
-func (r *queryResolver) GetMessages(ctx context.Context, paginationSettings model.ListPaginationSettings, dialogIDHolder *model.IDHolder) ([]*model.Dialog, error) {
+func (r *queryResolver) GetMessages(ctx context.Context, paginationSettings model.ListPaginationSettings, dialogIDHolder model.IDHolder) ([]*model.Dialog, error) {
 	panic(fmt.Errorf("not implemented: GetMessages - getMessages"))
 }

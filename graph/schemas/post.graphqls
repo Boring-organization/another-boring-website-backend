@@ -23,11 +23,11 @@ input UpdatePost {
 extend type Mutation {
     createPost(newPost: NewPost!): Post! @authenticated
     updatePost(newPostData: UpdatePost!): Post! @authenticated
-    deletePost(postIdHolder: IdHolder!): DeleteResult! @authenticated
+    deletePost(postIdHolder: IdHolder! @idExistInTable(table: Post)): DeleteResult! @authenticated
 }
 
 extend type Query {
-    getPost(postIdHolder: IdHolder!): Post! @authenticated
+    getPost(postIdHolder: IdHolder! @idExistInTable(table: Post)): Post! @authenticated
     getMyPosts(paginationSettings: ListPaginationSettings!): [Post!]! @authenticated
-    getUserPosts(userIdHolder: IdHolder!, paginationSettings: ListPaginationSettings!): [Post!]! @authenticated
+    getUserPosts(userIdHolder: IdHolder! @idExistInTable(table: User), paginationSettings: ListPaginationSettings!): [Post!]! @authenticated
 }
