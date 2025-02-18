@@ -1,7 +1,7 @@
 package databaseUtils
 
 import (
-	"TestGoLandProject/global_consts"
+	"TestGoLandProject/global_const"
 	"TestGoLandProject/graph/model"
 	"database/sql"
 	"fmt"
@@ -254,7 +254,7 @@ func GetPostFromDatabase(database sq.StatementBuilderType, postId string) (*mode
 		return nil, fmt.Errorf("can't get user for post %s: %w", postId, err)
 	}
 
-	comments, err := GetPostCommentsFromDatabase(database, postId, global_consts.DefaultListPaginationSettings)
+	comments, err := GetPostCommentsFromDatabase(database, postId, globalConst.DefaultListPaginationSettings)
 	if err != nil {
 		return nil, fmt.Errorf("can't get user for post %s: %w", postId, err)
 	}
@@ -353,7 +353,7 @@ func GetGameFindPostFromDatabase(database sq.StatementBuilderType, gameFindPostI
 		return nil, fmt.Errorf("can't get user for game find post %s: %w", gameFindPostId, err)
 	}
 
-	comments, err := GetGameFindPostCommentsFromDatabase(database, gameFindPostId, global_consts.DefaultListPaginationSettings)
+	comments, err := GetGameFindPostCommentsFromDatabase(database, gameFindPostId, globalConst.DefaultListPaginationSettings)
 	if err != nil {
 		return nil, fmt.Errorf("can't get user for game find post %s: %w", gameFindPostId, err)
 	}

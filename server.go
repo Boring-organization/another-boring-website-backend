@@ -6,7 +6,7 @@ import (
 	"TestGoLandProject/core/router"
 	"TestGoLandProject/core/utils/common"
 	"TestGoLandProject/core/validation"
-	"TestGoLandProject/global_consts"
+	"TestGoLandProject/global_const"
 	graph "TestGoLandProject/graph/generated"
 	"TestGoLandProject/graph/resolvers"
 	"context"
@@ -65,7 +65,7 @@ func graphqlHandler(resolver graph.ResolverRoot, databaseInstance sq.StatementBu
 }
 
 func playgroundHandler() gin.HandlerFunc {
-	playgroundHandler := playground.Handler("GraphQL", global_consts.ApiUrl)
+	playgroundHandler := playground.Handler("GraphQL", globalConst.ApiUrl)
 
 	return func(c *gin.Context) {
 		playgroundHandler.ServeHTTP(c.Writer, c.Request)
@@ -102,7 +102,7 @@ func main() {
 	ginRouter := gin.Default()
 	ginRouter.Use(GinContextToContextMiddleware())
 
-	ginRouter.POST(global_consts.QueryUrl, graphqlHandler(resolverInstance, sqDb))
+	ginRouter.POST(globalConst.QueryUrl, graphqlHandler(resolverInstance, sqDb))
 	ginRouter.GET("/", playgroundHandler())
 	router.InitHttpRoutes(ginRouter)
 

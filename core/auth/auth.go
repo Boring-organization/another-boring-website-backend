@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"TestGoLandProject/global_consts"
+	"TestGoLandProject/global_const"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var jwtKey = []byte(global_consts.JwtSeed)
+var jwtKey = []byte(globalConst.JwtSeed)
 
 type Claims struct {
 	UserId string `json:"userId"`

@@ -9,13 +9,15 @@ import (
 	commonUtils "TestGoLandProject/core/utils/common"
 	databaseUtils "TestGoLandProject/core/utils/database_utils"
 	resolverUtils "TestGoLandProject/core/utils/resolver"
+	"TestGoLandProject/global_const"
 	"TestGoLandProject/graph/model"
 	"context"
 	"fmt"
-	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -40,8 +42,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, newUserData model.Cre
 		Token:        nil,
 	}
 
-	tokenLiveTime := time.Hour * 24 * 30
-	jwtToken, err := auth.GenerateJwt(id.String(), tokenLiveTime)
+	jwtToken, err := auth.GenerateJwt(id.String(), globalConst.TokenLiveTime)
 	if err != nil {
 		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't generate token: %w", err))
 	}
@@ -50,7 +51,8 @@ func (r *mutationResolver) CreateUser(ctx context.Context, newUserData model.Cre
 	if err != nil {
 		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't add new user to database: %w", err))
 	}
-	_, err = r.db.Insert("Auth_data").Columns("token", "user_id", "device_name", "device_id", "used_at", "expired_at").Values(jwtToken, id.String(), newUserData.DeviceName, newUserData.DeviceID, timeNow, time.Now().Add(tokenLiveTime).UnixMilli()).Exec()
+
+	_, err = r.db.Insert("Auth_data").Columns("token", "user_id", "device_name", "device_id", "used_at", "expired_at").Values(jwtToken, id.String(), newUserData.DeviceName, newUserData.DeviceID, timeNow, time.Now().Add(globalConst.TokenLiveTime).UnixMilli()).Exec()
 	if err != nil {
 		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't add auth data to database: %w", err))
 	}
@@ -69,7 +71,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, newUserData model.Upd
 
 	timeNow := int(time.Now().UnixMilli())
 
-	_, err = r.db.Update("User").Where(sq.Eq{"id": newUserData.ID}).Set("nickname", newUserData.Nickname).Set("edited_at", timeNow).Set("last_action_at", timeNow).Exec()
+	_, err = r.db.Update("User").Where(sq.Eq{"id": newUserData.ID}).Set("nickname", newUserData.Nickname).Set("edited_at", timeNow).Exec()
 	if err != nil {
 		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user data in database: %w", err))
 	}
@@ -77,6 +79,11 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, newUserData model.Upd
 	user, err := databaseUtils.GetUserFromDatabase(r.db, newUserData.ID)
 	if err != nil {
 		return nil, commonUtils.ResponseError(ginContext, http.StatusNotFound, fmt.Errorf("user not found: %w", err))
+	}
+
+	err = resolverUtils.UpdateUserLastActionTime(r.db, newUserData.ID)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user last action time in database: %w", err))
 	}
 
 	return user, nil
@@ -93,6 +100,11 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, userIDHolder model.ID
 	_, err = r.db.Update("User").Where(sq.Eq{"id": userIDHolder.ID}).Set("deleted_at", timeNow).Set("last_action_at", timeNow).Exec()
 	if err != nil {
 		return &model.DeleteResult{IsDeleted: false}, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't delete user: %w", err))
+	}
+
+	err = resolverUtils.UpdateUserLastActionTime(r.db, userIDHolder.ID)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user last action time in database: %w", err))
 	}
 
 	return &model.DeleteResult{IsDeleted: true}, nil
@@ -115,17 +127,76 @@ func (r *mutationResolver) FriendInviteUser(ctx context.Context, userIDHolder mo
 		return false, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't add friend invite: %w", err))
 	}
 
+	err = resolverUtils.UpdateUserLastActionTime(r.db, *userId)
+	if err != nil {
+		return false, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user last action time in database: %w", err))
+	}
+
 	return true, nil
+}
+
+// DeleteFriendInvite is the resolver for the deleteFriendInvite field.
+func (r *mutationResolver) DeleteFriendInvite(ctx context.Context, userIDHolder model.IDHolder) (*model.DeleteResult, error) {
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
+	if err != nil {
+		return &model.DeleteResult{}, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+	}
+
+	userId, err := resolverUtils.GetUserIdFromContext(ginContext, r.db)
+	if err != nil {
+		return &model.DeleteResult{}, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user id from request header: %w", err))
+	}
+
+	_, err = r.db.Delete("User_friend_link").Where(sq.Eq{"requester_id": *userId, "requested_id": userIDHolder.ID}).Exec()
+	if err != nil {
+		return &model.DeleteResult{}, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't delete friend invite to user %s: %w", userIDHolder.ID, err))
+	}
+
+	err = resolverUtils.UpdateUserLastActionTime(r.db, *userId)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user last action time in database: %w", err))
+	}
+
+	return &model.DeleteResult{IsDeleted: true}, nil
 }
 
 // ChangePassword is the resolver for the changePassword field.
 func (r *mutationResolver) ChangePassword(ctx context.Context, passwordData model.NewPassword) (*model.Token, error) {
-	panic(fmt.Errorf("not implemented: ChangePassword - changePassword"))
-}
+	ginContext, err := commonUtils.GinContextFromContext(ctx)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get gin context: %w", err))
+	}
 
-// ChangeEmail is the resolver for the changeEmail field.
-func (r *mutationResolver) ChangeEmail(ctx context.Context, emailData model.NewEmail) (*model.Token, error) {
-	panic(fmt.Errorf("not implemented: ChangeEmail - changeEmail"))
+	userId, err := resolverUtils.GetUserIdFromContext(ginContext, r.db)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("can't get user id from request header: %w", err))
+	}
+
+	user, err := databaseUtils.GetUserFromDatabase(r.db, *userId)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user info from database: %w", err))
+	}
+
+	if *user.Password != passwordData.OldPassword {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusBadRequest, fmt.Errorf("old password %s is wrong: %w", passwordData.OldPassword, err))
+	}
+
+	_, err = r.db.Update("User").Where(sq.Eq{"id": userId}).Set("password", passwordData.NewPassword).Exec()
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user password in database: %w", err))
+	}
+
+	err = resolverUtils.UpdateUserLastActionTime(r.db, *userId)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user last action time in database: %w", err))
+	}
+
+	jwtToken, err := resolverUtils.RefreshUserToken(r.db, *userId)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't refresh token token: %w", err))
+	}
+
+	return &model.Token{Token: *jwtToken}, nil
 }
 
 // Me is the resolver for the me field.
@@ -143,6 +214,11 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	user, err := databaseUtils.GetUserFromDatabase(r.db, *userId)
 	if err != nil {
 		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't get user info from database: %w", err))
+	}
+
+	err = resolverUtils.UpdateUserLastActionTime(r.db, *userId)
+	if err != nil {
+		return nil, commonUtils.ResponseError(ginContext, http.StatusInternalServerError, fmt.Errorf("can't update user last action time in database: %w", err))
 	}
 
 	return user, nil

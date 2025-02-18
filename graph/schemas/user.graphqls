@@ -45,7 +45,6 @@ input NewPassword {
 }
 
 input NewEmail {
-    oldEmail: String! @maxLength(value: 100) @notEmptyString @email
     newEmail: String! @maxLength(value: 100) @notEmptyString @email
 }
 
@@ -54,8 +53,8 @@ extend type Mutation {
     updateUser(newUserData: UpdateUser!): User!  @authenticated
     deleteUser(userIdHolder: IdHolder! @idExistInTable(table: User)): DeleteResult! @authenticated
     friendInviteUser(userIdHolder: IdHolder! @idExistInTable(table: User)): Boolean! @authenticated
+    deleteFriendInvite(userIdHolder: IdHolder! @idExistInTable(table: User)): DeleteResult! @authenticated
     changePassword(passwordData: NewPassword!): Token! @authenticated
-    changeEmail(emailData: NewEmail!): Token! @authenticated
 }
 
 extend type Query {

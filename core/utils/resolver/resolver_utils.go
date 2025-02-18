@@ -2,11 +2,15 @@ package resolverUtils
 
 import (
 	"TestGoLandProject/core/auth"
+	commonUtils "TestGoLandProject/core/utils/common"
 	"TestGoLandProject/core/utils/database_utils"
+	"TestGoLandProject/global_const"
 	"TestGoLandProject/graph/model"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"time"
 )
 
 // endregion
@@ -93,6 +97,29 @@ func GetUserFriendInvites(database sq.StatementBuilderType, userId string, pagin
 	}
 
 	return friendInvites, nil
+}
+
+func UpdateUserLastActionTime(database sq.StatementBuilderType, userId string) error {
+	_, err := database.Update("User").Where(sq.Eq{"id": userId}).Set("last_action_at", time.Now().UnixMilli()).Exec()
+	if err != nil {
+		return fmt.Errorf("can't update user last action time in database: %w", err)
+	}
+
+	return nil
+}
+
+func RefreshUserToken(database sq.StatementBuilderType, userId string) (*string, error) {
+	jwtToken, err := auth.GenerateJwt(userId, globalConst.TokenLiveTime)
+	if err != nil {
+		return nil, fmt.Errorf("can't generate token: %w", err)
+	}
+
+	_, err = database.Update("Auth_data").Where(sq.Eq{"user_id": userId}).Set("token", jwtToken).Set("expired_at", time.Now().Add(globalConst.TokenLiveTime).UnixMilli()).Exec()
+	if err != nil {
+		return nil, fmt.Errorf("can't update user auth_data in database: %w", err)
+	}
+
+	return &jwtToken, nil
 }
 
 // endregion
