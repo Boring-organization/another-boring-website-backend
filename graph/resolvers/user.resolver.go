@@ -9,7 +9,7 @@ import (
 	commonUtils "TestGoLandProject/core/utils/common"
 	databaseUtils "TestGoLandProject/core/utils/database_utils"
 	resolverUtils "TestGoLandProject/core/utils/resolver"
-	"TestGoLandProject/global_const"
+	globalConst "TestGoLandProject/global_const"
 	"TestGoLandProject/graph/model"
 	"context"
 	"fmt"

@@ -1,0 +1,9 @@
+extend type Mutation {
+    addNewAvatar(avatarImageId: IdHolder! @idExistInTable(table: Temporary_image)): Image! @authenticated
+    deleteAvatar(avatarImageId: IdHolder! @idExistInTable(table: User_avatar_image)): DeleteResult!  @authenticated
+}
+
+extend type Query {
+    myAvatars: [Image!]! @authenticated
+    userAvatars(userIdHolder: IdHolder! @idExistInTable(table: User)): [Image!]! @authenticated
+}

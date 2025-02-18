@@ -5,4 +5,3 @@ type Image {
     createdAt: Int64!
     deletedAt: Int64
 }
-
